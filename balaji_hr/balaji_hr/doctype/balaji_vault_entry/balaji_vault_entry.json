@@ -1,0 +1,64 @@
+{
+  "doctype": "DocType",
+  "name": "Balaji Vault Entry",
+  "module": "Balaji HR",
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "track_changes": 0,
+  "permissions": [],
+  "fields": [
+    {
+      "fieldname": "employee",
+      "label": "Private Employee",
+      "fieldtype": "Link",
+      "options": "Balaji Vault Employee",
+      "reqd": 1
+    },
+    {
+      "fieldname": "entry_date",
+      "label": "Date",
+      "fieldtype": "Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "entry_type",
+      "label": "Type",
+      "fieldtype": "Select",
+      "options": "Attendance\nLeave\nSalary\nNote",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "label": "Status",
+      "fieldtype": "Select",
+      "options": "\nPresent\nAbsent\nHalf Day\nApproved\nPending\nPaid"
+    },
+    {
+      "fieldname": "days",
+      "label": "Days",
+      "fieldtype": "Float"
+    },
+    {
+      "fieldname": "amount",
+      "label": "Amount (MYR)",
+      "fieldtype": "Currency"
+    },
+    {
+      "fieldname": "notes",
+      "label": "Notes",
+      "fieldtype": "Small Text"
+    }
+  ],
+  "field_order": [
+    "employee",
+    "entry_date",
+    "entry_type",
+    "status",
+    "days",
+    "amount",
+    "notes"
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "show_name_in_global_search": 0
+}

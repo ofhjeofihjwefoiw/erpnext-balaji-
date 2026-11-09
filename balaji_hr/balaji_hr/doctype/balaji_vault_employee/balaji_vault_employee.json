@@ -1,0 +1,141 @@
+{
+  "doctype": "DocType",
+  "name": "Balaji Vault Employee",
+  "module": "Balaji HR",
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "track_changes": 0,
+  "permissions": [],
+  "fields": [
+    {
+      "fieldname": "employee_name",
+      "label": "Employee Name",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "company",
+      "label": "Company",
+      "fieldtype": "Link",
+      "options": "Company",
+      "reqd": 1
+    },
+    {
+      "fieldname": "category",
+      "label": "Employee Category",
+      "fieldtype": "Select",
+      "options": "Local\nForeign\nOther",
+      "default": "Local"
+    },
+    {
+      "fieldname": "department",
+      "label": "Department",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "designation",
+      "label": "Designation",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "position",
+      "label": "Position",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "salary",
+      "label": "Salary (MYR)",
+      "fieldtype": "Currency"
+    },
+    {
+      "fieldname": "permit_number",
+      "label": "Permit Details",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "permit_expiry_date",
+      "label": "Permit Expiry Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "visa_number",
+      "label": "Visa Details",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "visa_expiry_date",
+      "label": "Visa Expiry Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "passport_number",
+      "label": "Passport Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "passport_expiry_date",
+      "label": "Passport Expiry Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "passport_copy",
+      "label": "Passport Copy",
+      "fieldtype": "Attach"
+    },
+    {
+      "fieldname": "epf_no",
+      "label": "EPF Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "eis_no",
+      "label": "EIS Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "socso_no",
+      "label": "SOCSO Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "pcb_no",
+      "label": "PCB / Tax Reference",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "leave_policy",
+      "label": "Leave Policy",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "leave_entitlement",
+      "label": "Annual Leave Entitlement",
+      "fieldtype": "Float"
+    }
+  ],
+  "field_order": [
+    "employee_name",
+    "company",
+    "category",
+    "department",
+    "designation",
+    "position",
+    "salary",
+    "permit_number",
+    "permit_expiry_date",
+    "visa_number",
+    "visa_expiry_date",
+    "passport_number",
+    "passport_expiry_date",
+    "passport_copy",
+    "epf_no",
+    "eis_no",
+    "socso_no",
+    "pcb_no",
+    "leave_policy",
+    "leave_entitlement"
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "show_name_in_global_search": 0
+}

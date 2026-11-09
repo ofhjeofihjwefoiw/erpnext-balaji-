@@ -1,0 +1,162 @@
+{
+  "doctype": "DocType",
+  "name": "Balaji Employee Private",
+  "module": "Balaji HR",
+  "autoname": "field:employee",
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "employee",
+    "immigration_section",
+    "passport_number",
+    "passport_expiry_date",
+    "passport_copy",
+    "visa_number",
+    "visa_issue_date",
+    "visa_expiry_date",
+    "visa_copy",
+    "permit_number",
+    "permit_issue_date",
+    "permit_expiry_date",
+    "permit_copy",
+    "pay_section",
+    "salary",
+    "currency",
+    "salary_effective_date",
+    "epf_no",
+    "eis_no",
+    "socso_no",
+    "pcb_no"
+  ],
+  "fields": [
+    {
+      "fieldname": "employee",
+      "label": "Employee",
+      "fieldtype": "Link",
+      "options": "Employee",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "immigration_section",
+      "label": "Passport, visa and permit",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "passport_number",
+      "label": "Passport Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "passport_expiry_date",
+      "label": "Passport Expiry Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "passport_copy",
+      "label": "Passport Copy",
+      "fieldtype": "Attach"
+    },
+    {
+      "fieldname": "visa_number",
+      "label": "Visa Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "visa_issue_date",
+      "label": "Visa Issue Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "visa_expiry_date",
+      "label": "Visa Expiry Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "visa_copy",
+      "label": "Visa Copy",
+      "fieldtype": "Attach"
+    },
+    {
+      "fieldname": "permit_number",
+      "label": "Permit Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "permit_issue_date",
+      "label": "Permit Issue Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "permit_expiry_date",
+      "label": "Permit Expiry Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "permit_copy",
+      "label": "Permit Copy",
+      "fieldtype": "Attach"
+    },
+    {
+      "fieldname": "pay_section",
+      "label": "Salary and Malaysia identifiers",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "salary",
+      "label": "Basic Salary (reference)",
+      "fieldtype": "Currency",
+      "description": "Reference only. Payroll uses Salary Structure Assignment and configured salary components."
+    },
+    {
+      "fieldname": "currency",
+      "label": "Currency",
+      "fieldtype": "Link",
+      "options": "Currency",
+      "default": "MYR"
+    },
+    {
+      "fieldname": "salary_effective_date",
+      "label": "Salary Effective Date",
+      "fieldtype": "Date"
+    },
+    {
+      "fieldname": "epf_no",
+      "label": "EPF Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "eis_no",
+      "label": "EIS Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "socso_no",
+      "label": "SOCSO Number",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "pcb_no",
+      "label": "PCB / Tax Reference Number",
+      "fieldtype": "Data"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Balaji HR Confidential",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1
+    }
+  ],
+  "title_field": "employee",
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}
