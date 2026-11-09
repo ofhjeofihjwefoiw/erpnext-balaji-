@@ -62,7 +62,8 @@ def overview():
         if frappe.has_permission(dt, "read"):
             count = frappe.get_list(dt, filters=filters, fields=["count(name) as total"])
             cards.append({"label": label, "value": count[0].total if count else 0})
-    return {"cards": cards, "can_create": bool(categories()) and frappe.has_permission("Employee", "create"),
+    return {"cards": cards, "operations": [dt for dt in OPERATIONS if frappe.has_permission(dt, "read")],
+            "operation_create": [dt for dt in OPERATIONS if frappe.has_permission(dt, "create")], "can_create": bool(categories()) and frappe.has_permission("Employee", "create"),
             "can_expiry": private_access() and frappe.has_permission(PRIVATE, "read")}
 
 
@@ -83,6 +84,35 @@ def profile(employee=None):
         frappe.throw("Employee entry role required.", frappe.PermissionError)
     private = private_record(employee) if employee else None
     private_visible = private_access() and frappe.has_permission(PRIVATE, "read")
+    attachments = read_fields(private, ("passport_copy", "permit_copy", "visa_copy")) if private else {}
+    if employee and private_visible:
+        doc.apply_fieldlevel_read_permissions()
+        for field in ("passport_copy", "permit_copy", "visa_copy"):
+            if not attachments.get(field):
+                document = field.removesuffix("_copy")
+                candidates = [df.fieldname for df in doc.meta.fields if df.fieldtype in ("Attach", "Attach Image")
+                              and document in df.fieldname.lower()]
+                for candidate in candidates:
+                    url = doc.get(candidate)
+                    if not isinstance(url, str) or not url.startswith("/private/files/"):
+                        continue
+                    file_id = frappe.db.get_value("File", {
+                        "file_url": url, "is_private": 1,
+                        "attached_to_doctype": "Employee", "attached_to_name": employee,
+                    }, "name")
+                    if file_id and frappe.get_doc("File", file_id).has_permission("read"):
+                        attachments[field] = url
+                        break
+    private_values = read_fields(private, PRIVATE_FIELDS) if private else {}
+    if employee and private_visible:
+        for field in ("passport_number", "passport_expiry_date", "permit_number", "permit_expiry_date",
+                      "permit_issue_date", "visa_number", "visa_expiry_date"):
+            if not private_values.get(field):
+                for candidate in (field, "custom_" + field, "custom_balaji_" + field,
+                                  "valid_upto" if field == "passport_expiry_date" else field):
+                    if doc.get(candidate):
+                        private_values[field] = doc.get(candidate)
+                        break
     schema = []
     for dt, names in (("Employee", EMPLOYEE_FIELDS), (PRIVATE, PRIVATE_FIELDS if private_visible else ())):
         for df in fields_for(dt, names):
@@ -91,8 +121,8 @@ def profile(employee=None):
             schema.append(dict(name=df.fieldname, label=df.label, type=df.fieldtype, options=df.options,
                                required=bool(df.reqd), private=dt == PRIVATE))
     return dict(schema=schema, values=read_fields(doc, EMPLOYEE_FIELDS),
-                private=read_fields(private, PRIVATE_FIELDS) if private else {},
-                attachments=read_fields(private, ("passport_copy", "permit_copy", "visa_copy")) if private else {},
+                private=private_values,
+                attachments=attachments,
                 categories=allowed, can_write=doc.has_permission("write" if employee else "create"),
                 can_private=private_visible and (private.has_permission("write") if private else frappe.has_permission(PRIVATE, "create")))
 
@@ -100,6 +130,8 @@ def profile(employee=None):
 @frappe.whitelist()
 def link_options(doctype, search=""):
     allowed = {df.options for df in fields_for("Employee", EMPLOYEE_FIELDS) if df.fieldtype == "Link"}
+    allowed.update(df.options for dt in OPERATIONS if frappe.has_permission(dt, "read")
+                   for df in operation_fields(dt) if df.fieldtype == "Link")
     if doctype not in allowed:
         frappe.throw("Unsupported selection.", frappe.PermissionError)
     return frappe.get_list(doctype, filters={"name": ["like", "%" + str(search)[:100] + "%"]},
@@ -185,3 +217,82 @@ def upload(employee, field):
     doc.set(field, attachment.file_url)
     doc.save()
     return True
+
+
+OPERATIONS = {
+    "Attendance": ("employee", "attendance_date", "status", "shift", "leave_type"),
+    "Employee Checkin": ("employee", "log_type", "time", "device_id"),
+    "Shift Assignment": ("employee", "shift_type", "start_date", "end_date", "status"),
+    "Holiday List": ("holiday_list_name", "from_date", "to_date", "weekly_off"),
+    "Leave Policy Assignment": (
+        "employee", "leave_policy", "assignment_based_on", "leave_period",
+        "effective_from", "effective_to",
+    ),
+}
+HOLIDAY_FIELDS = ("holiday_date", "description", "weekly_off")
+
+
+def operation_fields(doctype):
+    if doctype not in OPERATIONS:
+        frappe.throw("Unsupported HR operation.", frappe.PermissionError)
+    return [df for df in fields_for(doctype, OPERATIONS[doctype]) if not df.permlevel]
+
+
+@frappe.whitelist()
+def operation_list(doctype, offset=0):
+    fields = [df.fieldname for df in operation_fields(doctype)]
+    return frappe.get_list(doctype, fields=["name", "docstatus", *fields],
+                           order_by="modified desc, name desc", start=max(0, cint(offset)),
+                           page_length=26)
+
+
+@frappe.whitelist()
+def operation_form(doctype, name=None):
+    fields = operation_fields(doctype)
+    doc = frappe.get_doc(doctype, name) if name else frappe.new_doc(doctype)
+    doc.check_permission("read" if name else "create")
+    child_fields = []
+    holidays = []
+    if doctype == "Holiday List":
+        child_fields = [df for df in fields_for("Holiday", HOLIDAY_FIELDS) if not df.permlevel]
+        holidays = [{df.fieldname: row.get(df.fieldname) for df in child_fields}
+                    for row in doc.get("holidays", [])]
+    return dict(
+        schema=[dict(name=df.fieldname, label=df.label, type=df.fieldtype,
+                     options=df.options, required=bool(df.reqd)) for df in fields],
+        child_schema=[dict(name=df.fieldname, label=df.label, type=df.fieldtype,
+                           options=df.options, required=bool(df.reqd)) for df in child_fields],
+        holidays=holidays,
+        values=read_fields(doc, [df.fieldname for df in fields]),
+        can_write=doc.docstatus == 0 and doc.has_permission("write" if name else "create"),
+        can_submit=bool(name and doc.docstatus == 0 and doc.meta.is_submittable and doc.has_permission("submit")),
+    )
+
+
+@frappe.whitelist(methods=["POST"])
+def operation_save(doctype, name=None, values=None, holidays=None, submit=False):
+    fields = {df.fieldname for df in operation_fields(doctype)}
+    values = frappe.parse_json(values) or {}
+    if not isinstance(values, dict) or values.keys() - fields:
+        frappe.throw("Unsupported field.")
+    doc = frappe.get_doc(doctype, name, for_update=True) if name else frappe.new_doc(doctype)
+    if doc.docstatus != 0:
+        frappe.throw("Only draft records can be edited.")
+    doc.check_permission("write" if name else "create")
+    doc.update(values)
+    if holidays is not None:
+        rows = frappe.parse_json(holidays)
+        allowed = {df.fieldname for df in fields_for("Holiday", HOLIDAY_FIELDS) if not df.permlevel}
+        if doctype != "Holiday List" or not isinstance(rows, list) or any(
+            not isinstance(row, dict) or row.keys() - allowed for row in rows
+        ):
+            frappe.throw("Invalid holiday rows.")
+        doc.set("holidays", rows)
+    if cint(submit):
+        if not name or not doc.meta.is_submittable:
+            frappe.throw("Save the draft before submitting.")
+        doc.check_permission("submit")
+        doc.submit()
+    else:
+        doc.save()
+    return doc.name
