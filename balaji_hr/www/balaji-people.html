@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Balaji Enterprises HRMS</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f2f5f7;color:#172d37;font:16px/1.5 system-ui,sans-serif}button,input,select{font:inherit}button,a{cursor:pointer}button:disabled{cursor:default;opacity:.5}a{color:inherit}header{background:#132e37;color:white;padding:20px clamp(18px,5vw,68px);display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap}header strong{font-size:21px}nav{display:flex;gap:8px;flex-wrap:wrap}button,.button{border:1px solid #b9c9cc;border-radius:9px;padding:9px 15px;background:white;color:#17323d;text-decoration:none}nav button{background:transparent;color:white;border-color:transparent}nav button[aria-current=true]{background:#30505b}main{max-width:1240px;margin:auto;padding:38px 20px}h1{font-size:clamp(26px,4vw,38px);line-height:1.2;margin:0 0 8px}h2{font-size:21px;margin:0 0 18px}.muted{color:#526a74}.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0}.primary{background:#136854;border-color:#136854;color:white}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:16px;margin:26px 0}.card,section,fieldset{background:white;border:1px solid #d9e3e7;border-radius:14px;padding:22px}.card{border-top:4px solid #36a68e}.card strong{display:block;font-size:34px;line-height:1.2;margin-bottom:6px}.table{overflow:auto}table{border-collapse:collapse;width:100%}td,th{padding:12px;text-align:left;border-bottom:1px solid #e3eaed;white-space:nowrap}th{font-size:14px;color:#526a74}td button{padding:0;border:0;color:#136854;text-decoration:underline}input,select,textarea{border:1px solid #b9c9cc;border-radius:8px;padding:9px 11px;background:white;color:#172d37;min-width:0;max-width:100%}fieldset{margin:18px 0;min-width:0}legend{font-size:18px;font-weight:650;padding:0 8px}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}label{display:grid;gap:6px}label input[type=checkbox]{justify-self:start}.error{color:#992c2c}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #37a990;outline-offset:2px}
+</style>
+<header><strong>Balaji Enterprises HRMS</strong><nav aria-label="Main navigation"><button data-view="overview">Overview</button><button data-view="employees">Employees</button><button data-view="reports" hidden>Expiry reports</button></nav></header>
+<main><p id="notice" role="status"></p><div id="screen"></div></main>
+<script>
+"use strict";
+const csrf = {{ csrf_token | tojson }};
+const screen = document.querySelector("#screen");
+const notice = document.querySelector("#notice");
+const escape = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const e = escape;
+let access, viewId = 0;
+async function api(method, args = {}, write = false) {
+  const query = new URLSearchParams(args);
+  const response = await fetch("/api/method/balaji_hr.people." + method + (write ? "" : "?" + query), {
+    method: write ? "POST" : "GET", headers: write ? {"Content-Type":"application/json","X-Frappe-CSRF-Token":csrf} : {},
+    body: write ? JSON.stringify(args) : undefined, cache:"no-store"
+  });
+  if (response.status === 401) throw Error("Your session expired. Sign in again.");
+  if (!response.ok) throw Error("Request failed. Check your permissions and the required values, then try again.");
+  return (await response.json()).message;
+}
+const table = (headers, rows) => rows.length ? '<div class="table"><table><thead><tr>' + headers.map(h=>'<th scope="col">'+e(h)+'</th>').join('') + '</tr></thead><tbody>' + rows.map(row=>'<tr>'+row.map(v=>'<td>'+v+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>' : '<p class="muted">No records found.</p>';
+function showError(error){notice.className="error";notice.textContent=error.message;}
+function view(name, employee) {
+  const id = ++viewId;
+  notice.textContent="";
+  screen.innerHTML="<p>Loading…</p>";
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",String(b.dataset.view===name)));
+  const render = html => {if(id===viewId) screen.innerHTML=html; return id===viewId;};
+  ({overview,employees,reports,profile}[name])(render, employee).catch(error=>{if(id===viewId){render("");showError(error);}});
+}
+function addButton(){return access?.can_create ? '<button class="primary" data-view="profile">Add employee</button>' : '';}
+async function overview(render){
+  access=await api("overview");
+  document.querySelector('[data-view=reports]').hidden=!access.can_expiry;
+  render('<h1>People overview</h1><p class="muted">Staffing, attendance and leave at a glance.</p><div class="bar">'+addButton()+'<button data-view="employees">View employees</button></div><div class="cards">'+access.cards.map(c=>'<article class="card"><strong>'+e(c.value)+'</strong>'+e(c.label)+'</article>').join('')+'</div>'+(access.can_expiry?'<section><h2>Upcoming document expiries</h2><p>Review permits, passports and visas due in the next 30 days.</p><button data-view="reports">Open expiry reports</button></section>':''));
+}
+function pagination(offset, count){return '<div class="bar"><button data-step="-25" '+(offset?'':'disabled')+'>Previous</button><button data-step="25" '+(count>25?'':'disabled')+'>Next</button></div>';}
+async function employees(render){
+  if(!render('<h1>Employees</h1><p class="muted">Search and open employee profiles.</p><form class="bar"><input name="search" aria-label="Employee name" placeholder="Search employee name"><select name="category" aria-label="Category"><option value="">All categories</option><option>Local</option><option>Foreign</option><option>Other</option></select><button>Search</button>'+addButton()+'</form><section class="results"></section>'))return;
+  await results("employees", r=>['Employee','ID','Department','Designation','Category','Status'], r=>[profileButton(r.name,r.employee_name),...["name","department","designation","custom_balaji_category","status"].map(k=>e(r[k]))]);
+}
+async function reports(render){
+  if(!render('<h1>Expiry reports</h1><p class="muted">Review upcoming expiry dates by document type.</p><form class="bar"><select name="kind" aria-label="Document type"><option value="permit_expiry_date">Work permits</option><option value="passport_expiry_date">Passports</option><option value="visa_expiry_date">Visas</option></select><select name="days" aria-label="Time window"><option>30</option><option>60</option><option>90</option></select><button>Run report</button></form><section class="results"></section>'))return;
+  await results("expiry",()=>["Employee","ID","Expires"],r=>[profileButton(r.employee,r.name),e(r.employee),e(r.expiry)]);
+}
+function profileButton(id,name){return '<button data-view="profile" data-employee="'+e(id)+'">'+e(name)+'</button>';}
+async function results(method,headers,map){
+  const form=screen.querySelector("form"), result=screen.querySelector(".results");
+  let offset=0, request=0;
+  async function load(){
+    const seq=++request;
+    result.textContent="Loading…";
+    try{
+      const payload=await api(method,{...Object.fromEntries(new FormData(form)),offset});
+      const rows=Array.isArray(payload)?payload:payload.rows;
+      const count=Array.isArray(payload)?rows.length:payload.has_more?26:rows.length;
+      if(seq===request&&result.isConnected)result.innerHTML=table(headers(rows),rows.slice(0,25).map(map))+pagination(offset,count);
+    }catch(error){if(seq===request&&result.isConnected){result.textContent="";showError(error);}}
+  }
+  form.addEventListener("submit",event=>{event.preventDefault();offset=0;load();});
+  result.addEventListener("click",event=>{const b=event.target.closest("[data-step]");if(b){offset+=Number(b.dataset.step);load();}});
+  await load();
+}
+async function profile(render,employee){
+  const p=await api("profile",employee?{employee}:{});
+  const groups=[["Employee details",p.schema.filter(f=>!f.private&&!f.name.startsWith("custom_balaji_leave")&&f.name!=="custom_balaji_auto_leave")],["Leave setup",p.schema.filter(f=>f.name.startsWith("custom_balaji_leave")||f.name==="custom_balaji_auto_leave")],["Confidential details",p.schema.filter(f=>f.private)]];
+  const select=(opts,val)=>['',...new Set([...(opts||[]),...(val?[val]:[])])].map(o=>'<option '+(o===val?'selected':'')+'>'+e(o)+'</option>').join('');
+  function field(f){
+    const val=(f.private?p.private:p.values)[f.name]??"";
+    const disabled=!p.can_write||(f.private&&!p.can_private)||(f.name==="custom_balaji_category"&&!p.categories.length);
+    const attrs=' name="'+e(f.name)+'" '+(f.required?'required ':'')+(disabled?'disabled ':'');
+    let control;
+    if(f.type==="Select")control='<select'+attrs+'>'+select(f.name==="custom_balaji_category"?p.categories:(f.options||"").split("\n").filter(Boolean),val)+'</select>';
+    else if(f.type==="Link")control='<input'+attrs+' value="'+e(val)+'" list="link-'+e(f.name)+'" data-link="'+e(f.options)+'" autocomplete="off"><datalist id="link-'+e(f.name)+'"></datalist>';
+    else if(f.type==="Check")control='<input type="checkbox"'+attrs+(Number(val)?' checked':'')+'>';
+    else control='<input type="'+(f.type==="Date"?"date":f.type==="Currency"?"number":"text")+'"'+attrs+' value="'+e(val)+'"'+(f.type==="Currency"?' step="0.01"':'')+'>';
+    return '<label>'+e(f.label)+control+'</label>';
+  }
+  if(!render('<h1>'+e(employee?p.values.first_name||employee:"Add employee")+'</h1><button data-view="employees">Back to employees</button><form>'+groups.filter(g=>g[1].length).map(([label,fields])=>'<fieldset><legend>'+e(label)+'</legend><div class="fields">'+fields.map(field).join('')+'</div></fieldset>').join('')+(p.can_write?'<button class="primary">Save employee</button>':'')+'</form>'))return;
+  const form=screen.querySelector("form");
+  if(employee&&(p.can_private||Object.values(p.attachments).some(Boolean))){
+    const files=document.createElement("section");
+    files.innerHTML='<h2>Confidential documents</h2>'+Object.entries({passport_copy:"Passport copy",permit_copy:"Permit copy",visa_copy:"Visa copy"}).map(([key,label])=>{
+      const url=p.attachments[key];
+      if(url?.startsWith("/private/files/"))return '<p><a href="'+e(url)+'" target="_blank" rel="noopener">'+e(label)+'</a></p>';
+      return p.can_private?'<form class="bar" data-upload="'+key+'"><label>'+e(label)+'<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required></label><button>Attach privately</button></form>':'';
+    }).join('');
+    form.after(files);
+    files.addEventListener("submit",async event=>{
+      event.preventDefault();
+      const upload=event.target, button=upload.querySelector("button");
+      const data=new FormData(upload);data.set("employee",employee);data.set("field",upload.dataset.upload);
+      button.disabled=true;
+      try{
+        const response=await fetch("/api/method/balaji_hr.people.upload",{method:"POST",headers:{"X-Frappe-CSRF-Token":csrf},body:data});
+        if(!response.ok)throw Error("Attachment failed. Check file format, size and access.");
+        if(upload.isConnected)view("profile",employee);
+      }catch(error){if(upload.isConnected){showError(error);button.disabled=false;}}
+    });
+  }
+  form.querySelectorAll("[data-link]").forEach(input=>{
+    let timer,seq=0;
+    const search=()=>{const current=++seq;clearTimeout(timer);timer=setTimeout(async()=>{try{const options=await api("link_options",{doctype:input.dataset.link,search:input.value});if(current===seq&&input.isConnected)input.list.innerHTML=options.map(x=>'<option value="'+e(x)+'"></option>').join('');}catch(error){if(input.isConnected)showError(error);}},180);};
+    input.addEventListener("input",search);input.addEventListener("focus",search);
+  });
+  form.addEventListener("submit",async event=>{
+    event.preventDefault();
+    if(!p.can_write)return;
+    const submit=form.querySelector(".primary");submit.disabled=true;
+    const values={},confidential={};
+    for(const f of p.schema){
+      const input=form.elements.namedItem(f.name);
+      if(!input||input.disabled)continue;
+      const target=f.private?confidential:values;
+      const value=input.type==="checkbox"?Number(input.checked):input.value;
+      if(f.private&&!employee&&value==="")continue;
+      if(f.private&&value===(p.private[f.name]??""))continue;
+      target[f.name]=value;
+    }
+    try{const id=await api("save",{employee,values,confidential},true);view("profile",id);notice.className="";notice.textContent="Employee saved.";}
+    catch(error){showError(error);submit.disabled=false;}
+  });
+}
+document.addEventListener("click",event=>{const b=event.target.closest("[data-view]");if(b){event.preventDefault();view(b.dataset.view,b.dataset.employee);}});
+view("overview");
+</script>
+</html>
