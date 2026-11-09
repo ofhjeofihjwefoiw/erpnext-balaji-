@@ -120,7 +120,14 @@ def profile(employee=None):
                 continue
             schema.append(dict(name=df.fieldname, label=df.label, type=df.fieldtype, options=df.options,
                                required=bool(df.reqd), private=dt == PRIVATE))
-    return dict(schema=schema, values=read_fields(doc, EMPLOYEE_FIELDS),
+    resignation = read_fields(doc, ("resignation_letter_date", "relieving_date"))
+    return dict(full_name=doc.get("employee_name"), can_view_private=private_visible,
+                resignation=dict(letter_date=resignation.get("resignation_letter_date"),
+                                 last_day=resignation.get("relieving_date")),
+                can_record_resignation=bool(employee and doc.has_permission("write") and
+                                            all(df.permlevel == 0 for df in fields_for("Employee", ("resignation_letter_date", "relieving_date"))) and
+                                            len(fields_for("Employee", ("resignation_letter_date", "relieving_date"))) == 2),
+                schema=schema, values=read_fields(doc, EMPLOYEE_FIELDS),
                 private=private_values,
                 attachments=attachments,
                 categories=allowed, can_write=doc.has_permission("write" if employee else "create"),
@@ -296,3 +303,75 @@ def operation_save(doctype, name=None, values=None, holidays=None, submit=False)
     else:
         doc.save()
     return doc.name
+
+
+@frappe.whitelist(methods=["POST"])
+def save_resignation(employee, letter_date, last_day):
+    from frappe.utils import getdate
+
+    doc = frappe.get_doc("Employee", employee, for_update=True)
+    doc.check_permission("write")
+    fields = fields_for("Employee", ("resignation_letter_date", "relieving_date"))
+    if len(fields) != 2 or any(df.permlevel for df in fields):
+        frappe.throw("Resignation date fields are unavailable.", frappe.PermissionError)
+    if not letter_date or not last_day:
+        frappe.throw("Enter both resignation dates.")
+    letter_date, last_day = getdate(letter_date), getdate(last_day)
+    if last_day < letter_date:
+        frappe.throw("Last working day cannot precede the letter date.")
+    doc.resignation_letter_date = letter_date
+    doc.relieving_date = last_day
+    doc.save()
+    return dict(letter_date=doc.resignation_letter_date, last_day=doc.relieving_date)
+
+
+@frappe.whitelist()
+def print_document_copies(employee):
+    from io import BytesIO
+
+    from PIL import Image, ImageOps
+
+    try:
+        from pypdf import PdfReader, PdfWriter
+    except ImportError:
+        from PyPDF2 import PdfReader, PdfWriter
+
+    data = profile(employee)
+    if not data["can_view_private"]:
+        frappe.throw("Confidential employee access required.", frappe.PermissionError)
+    private = private_record(employee)
+    parents = {("Employee", employee)}
+    if private:
+        parents.add((PRIVATE, private.name))
+    writer = PdfWriter()
+    for field in ("passport_copy", "permit_copy"):
+        url = data["attachments"].get(field)
+        if not isinstance(url, str) or not url.startswith("/private/files/"):
+            frappe.throw("Both private copies are required for the combined PDF.")
+        for parent_type, parent_name in parents:
+            file_id = frappe.db.get_value("File", {
+                "file_url": url, "is_private": 1, "attached_to_doctype": parent_type,
+                "attached_to_name": parent_name,
+            }, "name")
+            if file_id:
+                break
+        else:
+            frappe.throw("A document copy could not be verified.")
+        file = frappe.get_doc("File", file_id)
+        file.check_permission("read")
+        content = file.get_content()
+        if isinstance(content, str):
+            content = content.encode()
+        stream = BytesIO(content)
+        if not content.startswith(b"%PDF-"):
+            image = ImageOps.exif_transpose(Image.open(stream)).convert("RGB")
+            image.thumbnail((1600, 2200))
+            stream = BytesIO()
+            image.save(stream, format="PDF")
+            stream.seek(0)
+        for page in PdfReader(stream).pages:
+            writer.add_page(page)
+    output = BytesIO()
+    writer.write(output)
+    frappe.local.response.update(filename="passport-and-permit.pdf", filecontent=output.getvalue(),
+                                 type="download", display_content_as="inline")
