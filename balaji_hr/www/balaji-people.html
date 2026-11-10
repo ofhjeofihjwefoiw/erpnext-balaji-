@@ -14,8 +14,9 @@ dialog{border:1px solid #d4dde7;border-radius:12px;width:min(920px,95vw);max-hei
 :root{--paper:#f5f3ee;--ink:#24241e;--line:#e6e1d7;--green:#25584e}body{background:var(--paper);color:var(--ink)}.workspace-side{position:fixed;inset:0 auto 0 0;width:246px;padding:22px 14px;border-right:1px solid var(--line);background:var(--paper);overflow:auto}.workspace-brand{display:flex;align-items:center;gap:11px;padding:4px 8px 23px;border-bottom:1px solid var(--line)}.workspace-brand span,.avatar{display:inline-grid;place-items:center;border-radius:10px;background:#dfede5;color:#25584e;width:37px;height:37px;flex:none;font-weight:700}.workspace-brand small{display:block;font-size:12px;font-weight:400;color:#625f56}.workspace-side nav{display:block}.workspace-side nav p{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.11em;color:#6d695f;margin:24px 8px 6px}.workspace-side nav button,.workspace-side nav a{display:block;text-align:left;width:100%;border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 10px;text-decoration:none}.workspace-side nav [hidden]{display:none}.workspace-side nav button[aria-current=true],.primary{background:#24241e;color:white;border-color:#24241e}.workspace-top{margin-left:246px;background:var(--paper);padding:16px 30px;border-color:var(--line);min-height:62px;color:#615d53}body>main{margin-left:246px;padding:26px 30px;max-width:none}.hero{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px}.hero h1{font-size:32px}.cards{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}.card{display:flex;flex-direction:column;gap:8px;border:0;border-right:1px solid var(--line);border-radius:0;padding:20px;background:#fffdfa;box-shadow:none}.card strong{color:#24241e;margin:0}.card span{font-size:12px;color:#625f56;text-transform:uppercase;letter-spacing:.06em}.dashboard-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}.dashboard-grid section{padding:0;background:#fffdfa;border-color:var(--line);box-shadow:none}.dashboard-grid h2{padding:15px 18px;margin:0;border-bottom:1px solid var(--line);font-size:16px}.feed{margin:0;padding:5px 18px;list-style:none}.feed li{padding:11px 0;border-bottom:1px solid var(--line)}.feed li:last-child{border:0}.feed small{display:block;color:#625f56}.feed button{border:0;padding:0;background:none;text-align:left;color:var(--green)}.badge{border-radius:30px;background:#e2eee7;padding:3px 8px;color:#20584a}.employee-cell{display:flex;gap:10px;align-items:center}.employee-cell small{display:block;color:#625f56}.table thead{background:#f2efe7}body>main section{border-color:var(--line)}.tool{background:#fffdfa}.tool strong{color:var(--green)}.calendar th:first-child,.calendar td:first-child{position:sticky;left:0;background:#fffdfa;z-index:1}.calendar td:not(:first-child){text-align:center}.calendar .dot{font-size:19px}.calendar [data-status="Present"]{color:#28765b}.calendar [data-status="Absent"]{color:#ac3d3d}.calendar [data-status="On Leave"]{color:#366e94}.calendar [data-status="Half Day"]{color:#9a681d}
 @media(max-width:800px){.workspace-side{position:static;width:auto;border-right:0;border-bottom:1px solid var(--line)}.workspace-side nav,.workspace-side nav #operation-nav{display:flex;flex-wrap:wrap}.workspace-side nav p{display:none}.workspace-side nav button,.workspace-side nav a{width:auto}.workspace-top,body>main{margin-left:0;padding:16px}.dashboard-grid{grid-template-columns:1fr}.hero{align-items:flex-start}}
 @media print{.workspace-side{display:none!important}}
+.workspace-side{width:208px}.workspace-top,body>main{margin-left:208px}.workspace-side nav button,.workspace-side nav a{padding:6px 8px;font-size:14px}.workspace-side nav p{margin-top:16px}.roster .shift-tag{padding:4px 8px;border-radius:5px;background:#dceee6;color:#214e40;text-decoration:none}.roster td,.roster th{padding:9px}.roster td:first-child,.roster th:first-child{position:sticky;left:0;background:#fffdfa}.roster{margin-top:12px}@media(max-width:800px){.workspace-side{width:auto}.workspace-top,body>main{margin-left:0}}
 </style>
-<aside class="workspace-side"><div class="workspace-brand"><span>BE</span><strong>Balaji Enterprises<small>People workspace</small></strong></div><nav aria-label="Main navigation"><p>Workspace</p><button data-view="overview">⌂ &nbsp; Dashboard</button><button data-view="employees">♙ &nbsp; Employees</button><p>Attendance &amp; leave</p><div id="operation-nav"></div><p>Reports &amp; settings</p><button data-view="reports" hidden>▤ &nbsp; Expiry reports</button><a id="company-settings" hidden>⚙ &nbsp; Company settings</a></nav></aside>
+<aside class="workspace-side"><div class="workspace-brand"><span>BE</span><strong>Balaji Enterprises<small>People workspace</small></strong></div><nav aria-label="Main navigation"><p>Workspace</p><button data-view="overview">⌂ &nbsp; Dashboard</button><button data-view="employees">♙ &nbsp; Employees</button><p>Attendance &amp; leave</p><div id="operation-nav"></div><div id="payroll-nav" hidden><p>Payroll</p><button data-view="payroll">▤ &nbsp; Payroll register</button></div><p>Reports &amp; settings</p><button data-view="reports" hidden>▤ &nbsp; Expiry reports</button><a id="company-settings" hidden>⚙ &nbsp; Company settings</a></nav></aside>
 <header class="workspace-top"><span id="workspace-path">Workspace · Dashboard</span><span id="workspace-user"></span></header>
 <main><button id="overview-back" type="button" data-view="overview" hidden>← Overview <kbd>O / Esc</kbd></button><p id="notice" role="status"></p><div id="screen"></div></main>
 <dialog id="print-dialog" aria-label="Employee document preview"><div class="bar print-controls"><button type="button" id="print-close">Close preview</button><button type="button" class="primary" id="print-now">Print / Save PDF</button></div><div class="print-sheet"></div></dialog>
@@ -43,11 +44,11 @@ function view(name, employee) {
   const id = ++viewId;
   document.querySelector("#overview-back").hidden=name==="overview";
   notice.textContent="";
-  document.querySelector("#workspace-path").textContent="Workspace · "+({overview:"Dashboard",employees:"Employees",profile:"Employee profile",reports:"Expiry reports",operation:operationLabels[employee]}[name]||"");
+  document.querySelector("#workspace-path").textContent="Workspace · "+({overview:"Dashboard",employees:"Employees",profile:"Employee profile",reports:"Expiry reports",payroll:"Payroll",operation:operationLabels[employee]}[name]||"");
   screen.innerHTML="<p>Loading…</p>";
   document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",String(b.dataset.view===name && (name!=="operation" || b.dataset.employee===employee))));
   const render = html => {if(id===viewId) screen.innerHTML=html; return id===viewId;};
-  ({overview,employees,reports,profile,operation}[name])(render, employee).catch(error=>{if(id===viewId){render("");showError(error);}});
+  ({overview,employees,reports,profile,operation,payroll}[name])(render, employee).catch(error=>{if(id===viewId){render("");showError(error);}});
 }
 function addButton(){return access?.can_create ? '<button class="primary" data-view="profile">Add employee</button>' : '';}
 async function overview(render){
@@ -62,6 +63,7 @@ async function overview(render){
     (data.can_expiry?'<section><h2>Upcoming document expiries</h2>'+feed(data.upcoming,r=>profileButton(r.employee,r.name)+'<small>'+e(r.document)+' · '+e(r.expiry)+'</small>',"No document expiries in the next 30 days.")+'</section>':'')+
     '</div><h2 style="margin-top:24px">Quick actions</h2><div class="tools">'+quick+'</div>'))return;
   access=data;
+  document.querySelector("#payroll-nav").hidden=!data.can_payroll;
   document.querySelector("nav [data-view=reports]").hidden=!data.can_expiry;
   document.querySelector("#workspace-user").textContent=data.user||"";
   document.querySelector("#operation-nav").innerHTML=(data.operations||[]).map(dt=>'<button data-view="operation" data-employee="'+e(dt)+'">'+e(operationLabels[dt])+'</button>').join("");
@@ -202,7 +204,9 @@ async function operation(render, dt, record, editing=false){
     if(step){offset+=Number(step.dataset.step);load();}
   };
   if(editing)await operationForm(panel,dt,record);
-  else if(dt==="Attendance"){
+  else if(dt==="Attendance"||dt==="Shift Assignment"){
+    const showGrid=dt==="Attendance"?attendanceCalendar:shiftRoster;
+    const gridLabel=dt==="Attendance"?"Monthly view":"Weekly roster";
     const toggle=document.createElement("button");
     toggle.type="button";
     toggle.textContent="List view";
@@ -210,13 +214,13 @@ async function operation(render, dt, record, editing=false){
     let calendar=true;
     toggle.onclick=()=>{
       calendar=!calendar;
-      toggle.textContent=calendar?"List view":"Monthly view";
-      if(calendar){++request;attendanceCalendar(panel);}
+      toggle.textContent=calendar?"List view":gridLabel;
+      if(calendar){++request;panel.onclick=null;showGrid(panel);}
       else{panel.onclick=null;offset=0;load();panel.onclick=listClick;}
     };
     const listClick=panel.onclick;
     panel.onclick=null;
-    await attendanceCalendar(panel);
+    await showGrid(panel);
   }else await load();
 }
 
@@ -247,6 +251,83 @@ async function attendanceCalendar(panel){
   }
   form.onsubmit=event=>{event.preventDefault();offset=0;load();};
   results.onclick=event=>{const step=event.target.closest("[data-step]");if(step){offset+=Number(step.dataset.step);load();}};
+  await load();
+}
+
+function pageDate(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");}
+function shiftDate(date,days){
+  const value=new Date(date+"T12:00:00");
+  value.setDate(value.getDate()+days);
+  return pageDate(value);
+}
+async function shiftRoster(panel){
+  panel.innerHTML='<form class="bar"><button type="button" data-week="-7" aria-label="Previous week">‹</button><label>Week of <input type="date" name="start" value="'+pageDate(new Date())+'" required></label><button type="button" data-week="7" aria-label="Next week">›</button><label>Department <input name="department" placeholder="All departments" list="roster-departments"><datalist id="roster-departments"></datalist></label><button>Apply</button></form><p class="muted">Select a shift to open its assignment. A dash means no submitted assignment was found.</p><div class="roster"></div>';
+  const form=panel.querySelector("form"), result=panel.querySelector(".roster");
+  const date=form.elements.start, department=form.elements.department;
+  let offset=0,request=0,lookup=0;
+  async function load(){
+    const seq=++request;
+    result.textContent="Loading roster…";
+    try{
+      const data=await api("shift_week",{start:date.value,department:department.value,offset});
+      if(!result.isConnected||seq!==request)return;
+      date.value=data.start;
+      result.innerHTML=table(["Employee","Department","Designation",...data.days.map(day=>new Date(day+"T12:00:00").toLocaleDateString("en-MY",{weekday:"short",day:"numeric",month:"short"}))],data.employees.map(row=>[
+        '<strong>'+e(row.employee_name)+'</strong><div class="muted">'+e(row.name)+'</div>',e(row.department),e(row.designation),
+        ...data.days.map(day=>data.assignments.filter(a=>a.employee===row.name&&a.start_date<=day&&(!a.end_date||a.end_date>=day))
+          .map(a=>'<button class="shift-tag" data-shift="'+e(a.name)+'">'+e(a.shift_type)+'</button>').join(" ")||'<span class="muted">—</span>')
+      ]))+pagination(offset,data.has_more?26:data.employees.length);
+    }catch(error){if(result.isConnected&&seq===request){result.textContent="";showError(error);}}
+  }
+  form.onsubmit=event=>{event.preventDefault();offset=0;load();};
+  form.onclick=event=>{const button=event.target.closest("[data-week]");if(button){date.value=shiftDate(date.value||pageDate(new Date()),Number(button.dataset.week));offset=0;load();}};
+  department.oninput=async()=>{
+    const seq=++lookup;
+    try{
+      const values=await api("link_options",{doctype:"Department",search:department.value});
+      if(seq===lookup&&department.isConnected)department.list.innerHTML=values.map(value=>'<option value="'+e(value)+'"></option>').join("");
+    }catch(error){if(seq===lookup&&department.isConnected)showError(error);}
+  };
+  result.onclick=event=>{
+    const shift=event.target.closest("[data-shift]");
+    if(shift)openOperation("Shift Assignment",shift.dataset.shift);
+    const step=event.target.closest("[data-step]");
+    if(step){offset+=Number(step.dataset.step);load();}
+  };
+  await load();
+}
+async function payroll(render){
+  if(!render('<div class="hero"><div><h1>Payroll</h1><p class="muted">Review payroll runs and salary slips by pay period.</p></div></div><form class="bar"><label>Pay month<input type="month" name="month" value="'+pageDate(new Date()).slice(0,7)+'" required></label><button>Apply</button></form><div id="payroll-results"></div>'))return;
+  const form=screen.querySelector("form"),result=screen.querySelector("#payroll-results");
+  let offset=0,request=0;
+  const money=(value,currency)=>e(currency||"")+' '+e(Number(value||0).toLocaleString("en-MY",{minimumFractionDigits:2,maximumFractionDigits:2}));
+  const link=(route,id,label)=>'<a href="/app/'+route+'/'+encodeURIComponent(id)+'">'+e(label||id)+'</a>';
+  const state=value=>e(({0:"Draft",1:"Submitted",2:"Cancelled"})[value]||"Unknown");
+  async function load(){
+    const seq=++request;
+    result.textContent="Loading payroll…";
+    try{
+      const data=await api("payroll_register",{month:form.elements.month.value,offset});
+      if(!result.isConnected||seq!==request)return;
+      const visible=data.slips.slice(0,25), totals=new Map();
+      for(const row of visible){
+        const currency=row.currency||"";
+        const total=totals.get(currency)||[0,0,0];
+        [row.gross_pay,row.total_deduction,row.net_pay].forEach((value,i)=>total[i]+=Number(value||0));
+        totals.set(currency,total);
+      }
+      result.innerHTML='<section><h2>Payroll runs</h2>'+table(["Run","Company","From","To","State"],data.runs.map(run=>[
+        link("payroll-entry",run.name),e(run.company),e(run.start_date),e(run.end_date),state(run.docstatus)
+      ]))+'</section><div class="bar"><span class="muted">Salary slip totals for this page</span></div>'+
+        [...totals].map(([currency,amounts])=>'<div class="cards">'+["Gross pay","Deductions","Net pay"].map((label,i)=>'<article class="card"><span>'+label+'</span><strong>'+money(amounts[i],currency)+'</strong></article>').join("")+'</div>').join("")+
+        '<section><h2>Payroll register</h2>'+table(["Employee","Department","Gross pay","Deductions","Net pay","State"],visible.map(row=>[
+          link("salary-slip",row.name,row.employee_name||row.employee),e(row.department),money(row.gross_pay,row.currency),
+          money(row.total_deduction,row.currency),money(row.net_pay,row.currency),state(row.docstatus)
+        ]))+pagination(offset,data.slips.length)+'</section>';
+    }catch(error){if(result.isConnected&&seq===request){result.textContent="";showError(error);}}
+  }
+  form.onsubmit=event=>{event.preventDefault();offset=0;load();};
+  result.onclick=event=>{const step=event.target.closest("[data-step]");if(step){offset+=Number(step.dataset.step);load();}};
   await load();
 }
 
@@ -442,6 +523,6 @@ view("overview");
 </script>
 {% if vault_eligible %}
 <link rel="stylesheet" href="/assets/balaji_hr/vault.css">
-<script data-balaji-vault-token="{{ csrf_token | e }}" src="/assets/balaji_hr/vault.js?v=people-1" defer></script>
+<script data-balaji-vault-token="{{ csrf_token | e }}" src="/assets/balaji_hr/vault.js?v=people-2" defer></script>
 {% endif %}
 </html>
