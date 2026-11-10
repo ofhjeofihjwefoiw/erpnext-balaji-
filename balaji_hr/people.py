@@ -62,9 +62,26 @@ def overview():
         if frappe.has_permission(dt, "read"):
             count = frappe.get_list(dt, filters=filters, fields=["count(name) as total"])
             cards.append({"label": label, "value": count[0].total if count else 0})
-    return {"cards": cards, "operations": [dt for dt in OPERATIONS if frappe.has_permission(dt, "read")],
+    can_read_employee = frappe.has_permission("Employee", "read")
+    recent = frappe.get_list("Employee", fields=["name", "employee_name", "designation", "date_of_joining"],
+                             filters={"date_of_joining": ["<=", today()]}, order_by="date_of_joining desc",
+                             page_length=5) if can_read_employee else []
+    requests = frappe.get_list("Leave Application", filters={"status": "Open", "docstatus": ["<", 2]},
+                               fields=["employee_name", "leave_type", "from_date", "to_date"],
+                               order_by="modified desc", page_length=4) if frappe.has_permission("Leave Application", "read") else []
+    can_expiry = private_access() and frappe.has_permission(PRIVATE, "read") and can_read_employee
+    upcoming = []
+    if can_expiry:
+        for field in EXPIRIES:
+            upcoming.extend(dict(row, document=field.split("_")[0].title()) for row in expiry(field)["rows"][:3])
+        upcoming = sorted(upcoming, key=lambda row: str(row["expiry"]))[:5]
+    user = frappe.get_cached_value("User", frappe.session.user, "full_name") or frappe.session.user
+    company = "Balaji Enterprise Sdn Bhb"
+    settings = company if frappe.db.exists("Company", company) and frappe.has_permission("Company", "write", doc=company) else None
+    return {"cards": cards, "recent": recent, "requests": requests, "upcoming": upcoming,
+            "user": user, "date": today(), "settings_company": settings, "operations": [dt for dt in OPERATIONS if frappe.has_permission(dt, "read")],
             "operation_create": [dt for dt in OPERATIONS if frappe.has_permission(dt, "create")], "can_create": bool(categories()) and frappe.has_permission("Employee", "create"),
-            "can_expiry": private_access() and frappe.has_permission(PRIVATE, "read")}
+            "can_expiry": can_expiry}
 
 
 @frappe.whitelist()
@@ -375,3 +392,28 @@ def print_document_copies(employee):
     writer.write(output)
     frappe.local.response.update(filename="passport-and-permit.pdf", filecontent=output.getvalue(),
                                  type="download", display_content_as="inline")
+
+
+@frappe.whitelist()
+def attendance_calendar(month, offset=0):
+    from calendar import monthrange
+    from datetime import date
+
+    try:
+        year, number = map(int, month.split("-"))
+        start = date(year, number, 1)
+        days = monthrange(year, number)[1]
+    except (ValueError, AttributeError):
+        frappe.throw("Choose a valid month.")
+    if not frappe.has_permission("Attendance", "read"):
+        frappe.throw("Attendance access required.", frappe.PermissionError)
+    employees = frappe.get_list("Employee", filters={"date_of_joining": ["<=", date(year, number, days)]},
+                                fields=["name", "employee_name", "department"],
+                                order_by="employee_name asc, name asc", start=max(0, cint(offset)), page_length=26)
+    roster = employees[:25]
+    entries = frappe.get_list("Attendance", filters={
+        "employee": ["in", [row.name for row in roster]],
+        "attendance_date": ["between", [start, date(year, number, days)]],
+        "docstatus": 1,
+    }, fields=["employee", "attendance_date", "status"], page_length=0) if roster else []
+    return dict(employees=roster, entries=entries, days=days, has_more=len(employees) > 25)
