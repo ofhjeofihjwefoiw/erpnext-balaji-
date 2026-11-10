@@ -79,7 +79,7 @@ def overview():
     company = "Balaji Enterprise Sdn Bhb"
     settings = company if frappe.db.exists("Company", company) and frappe.has_permission("Company", "write", doc=company) else None
     return {"cards": cards, "recent": recent, "requests": requests, "upcoming": upcoming,
-            "user": user, "date": today(), "settings_company": settings, "operations": [dt for dt in OPERATIONS if frappe.has_permission(dt, "read")],
+            "user": user, "date": today(), "can_payroll": frappe.has_permission("Salary Slip", "read"), "settings_company": settings, "operations": [dt for dt in OPERATIONS if frappe.has_permission(dt, "read")],
             "operation_create": [dt for dt in OPERATIONS if frappe.has_permission(dt, "create")], "can_create": bool(categories()) and frappe.has_permission("Employee", "create"),
             "can_expiry": can_expiry}
 
@@ -156,6 +156,8 @@ def link_options(doctype, search=""):
     allowed = {df.options for df in fields_for("Employee", EMPLOYEE_FIELDS) if df.fieldtype == "Link"}
     allowed.update(df.options for dt in OPERATIONS if frappe.has_permission(dt, "read")
                    for df in operation_fields(dt) if df.fieldtype == "Link")
+    if frappe.has_permission("Shift Assignment", "read"):
+        allowed.add("Department")
     if doctype not in allowed:
         frappe.throw("Unsupported selection.", frappe.PermissionError)
     return frappe.get_list(doctype, filters={"name": ["like", "%" + str(search)[:100] + "%"]},
@@ -417,3 +419,55 @@ def attendance_calendar(month, offset=0):
         "docstatus": 1,
     }, fields=["employee", "attendance_date", "status"], page_length=0) if roster else []
     return dict(employees=roster, entries=entries, days=days, has_more=len(employees) > 25)
+
+
+@frappe.whitelist()
+def shift_week(start=None, department=None, offset=0):
+    from datetime import timedelta
+
+    from frappe.utils import getdate
+
+    if not frappe.has_permission("Shift Assignment", "read"):
+        frappe.throw("Shift assignment access required.", frappe.PermissionError)
+    start = getdate(start or today())
+    start -= timedelta(days=start.weekday())
+    end = start + timedelta(days=6)
+    filters = {"status": "Active", "date_of_joining": ["<=", end]}
+    if department:
+        filters["department"] = department
+    people = frappe.get_list("Employee", filters=filters,
+                             fields=["name", "employee_name", "department", "designation"],
+                             order_by="employee_name asc, name asc", start=max(0, cint(offset)), page_length=26)
+    roster = people[:25]
+    assignments = frappe.get_list("Shift Assignment", filters={
+        "employee": ["in", [row.name for row in roster]], "start_date": ["<=", end],
+        "docstatus": 1, "status": "Active",
+    }, or_filters=[["end_date", ">=", start], ["end_date", "is", "not set"]],
+        fields=["name", "employee", "shift_type", "start_date", "end_date"],
+        order_by="start_date asc", page_length=0) if roster else []
+    return dict(start=start, days=[start + timedelta(days=i) for i in range(7)], employees=roster,
+                assignments=assignments, has_more=len(people) > 25)
+
+
+@frappe.whitelist()
+def payroll_register(month, offset=0):
+    from calendar import monthrange
+    from datetime import date
+
+    try:
+        year, number = map(int, month.split("-"))
+        start = date(year, number, 1)
+        end = date(year, number, monthrange(year, number)[1])
+    except (AttributeError, ValueError):
+        frappe.throw("Choose a valid month.")
+    if not frappe.has_permission("Salary Slip", "read"):
+        frappe.throw("Payroll access required.", frappe.PermissionError)
+    filters = {"end_date": ["between", [start, end]], "docstatus": ["<", 2]}
+    slips = frappe.get_list("Salary Slip", filters=filters,
+                            fields=["name", "employee", "employee_name", "department", "currency",
+                                    "gross_pay", "total_deduction", "net_pay", "docstatus"],
+                            order_by="employee_name asc, name asc", start=max(0, cint(offset)), page_length=26)
+    runs = frappe.get_list("Payroll Entry", filters=filters,
+                           fields=["name", "company", "start_date", "end_date", "docstatus"],
+                           order_by="start_date desc", page_length=15) if frappe.has_permission("Payroll Entry", "read") else []
+    return dict(slips=slips, runs=runs)
