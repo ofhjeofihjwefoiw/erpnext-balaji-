@@ -3,6 +3,7 @@
   if(window.__balajiVaultInstalled)return;
   window.__balajiVaultInstalled=true;
   const standalone = document.querySelector("[data-balaji-vault-token]");
+  const privateWindow = standalone?.dataset.vaultWindow === "true";
   const csrfToken = () => standalone?.dataset.balajiVaultToken || window.frappe?.csrf_token || "";
   const base = "/api/method/balaji_hr.vault.";
   const escape = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -111,11 +112,19 @@
       presses=0;
       event.preventDefault();
       event.stopImmediatePropagation?.();
-      openPrompt();
+      if(standalone && !privateWindow){
+        const popup=window.open("/balaji-private","balaji_private_office","popup,width=1120,height=800");
+        if(popup)popup.focus();
+        else window.location.assign("/balaji-private");
+      }else openPrompt();
       return;
     }
     presses=0;
   },true);
+  if(privateWindow){
+    document.querySelector("#vault-reopen")?.addEventListener("click",openPrompt);
+    openPrompt();
+  }
   document.addEventListener("visibilitychange",()=>{if(document.hidden && overlay)close();});
   window.addEventListener("pagehide",()=>{if(overlay)close();});
 })();
