@@ -62,8 +62,26 @@ def overview():
         if frappe.has_permission(dt, "read"):
             count = frappe.get_list(dt, filters=filters, fields=["count(name) as total"])
             cards.append({"label": label, "value": count[0].total if count else 0})
-    return {"cards": cards, "can_create": bool(categories()) and frappe.has_permission("Employee", "create"),
-            "can_expiry": private_access() and frappe.has_permission(PRIVATE, "read")}
+    can_read_employee = frappe.has_permission("Employee", "read")
+    recent = frappe.get_list("Employee", fields=["name", "employee_name", "designation", "date_of_joining"],
+                             filters={"date_of_joining": ["<=", today()]}, order_by="date_of_joining desc",
+                             page_length=5) if can_read_employee else []
+    requests = frappe.get_list("Leave Application", filters={"status": "Open", "docstatus": ["<", 2]},
+                               fields=["employee_name", "leave_type", "from_date", "to_date"],
+                               order_by="modified desc", page_length=4) if frappe.has_permission("Leave Application", "read") else []
+    can_expiry = private_access() and frappe.has_permission(PRIVATE, "read") and can_read_employee
+    upcoming = []
+    if can_expiry:
+        for field in EXPIRIES:
+            upcoming.extend(dict(row, document=field.split("_")[0].title()) for row in expiry(field)["rows"][:3])
+        upcoming = sorted(upcoming, key=lambda row: str(row["expiry"]))[:5]
+    user = frappe.get_cached_value("User", frappe.session.user, "full_name") or frappe.session.user
+    company = "Balaji Enterprise Sdn Bhb"
+    settings = company if frappe.db.exists("Company", company) and frappe.has_permission("Company", "write", doc=company) else None
+    return {"cards": cards, "recent": recent, "requests": requests, "upcoming": upcoming,
+            "user": user, "date": today(), "can_payroll": frappe.has_permission("Salary Slip", "read"), "settings_company": settings, "operations": [dt for dt in OPERATIONS if frappe.has_permission(dt, "read")],
+            "operation_create": [dt for dt in OPERATIONS if frappe.has_permission(dt, "create")], "can_create": bool(categories()) and frappe.has_permission("Employee", "create"),
+            "can_expiry": can_expiry}
 
 
 @frappe.whitelist()
@@ -83,6 +101,35 @@ def profile(employee=None):
         frappe.throw("Employee entry role required.", frappe.PermissionError)
     private = private_record(employee) if employee else None
     private_visible = private_access() and frappe.has_permission(PRIVATE, "read")
+    attachments = read_fields(private, ("passport_copy", "permit_copy", "visa_copy")) if private else {}
+    if employee and private_visible:
+        doc.apply_fieldlevel_read_permissions()
+        for field in ("passport_copy", "permit_copy", "visa_copy"):
+            if not attachments.get(field):
+                document = field.removesuffix("_copy")
+                candidates = [df.fieldname for df in doc.meta.fields if df.fieldtype in ("Attach", "Attach Image")
+                              and document in df.fieldname.lower()]
+                for candidate in candidates:
+                    url = doc.get(candidate)
+                    if not isinstance(url, str) or not url.startswith("/private/files/"):
+                        continue
+                    file_id = frappe.db.get_value("File", {
+                        "file_url": url, "is_private": 1,
+                        "attached_to_doctype": "Employee", "attached_to_name": employee,
+                    }, "name")
+                    if file_id and frappe.get_doc("File", file_id).has_permission("read"):
+                        attachments[field] = url
+                        break
+    private_values = read_fields(private, PRIVATE_FIELDS) if private else {}
+    if employee and private_visible:
+        for field in ("passport_number", "passport_expiry_date", "permit_number", "permit_expiry_date",
+                      "permit_issue_date", "visa_number", "visa_expiry_date"):
+            if not private_values.get(field):
+                for candidate in (field, "custom_" + field, "custom_balaji_" + field,
+                                  "valid_upto" if field == "passport_expiry_date" else field):
+                    if doc.get(candidate):
+                        private_values[field] = doc.get(candidate)
+                        break
     schema = []
     for dt, names in (("Employee", EMPLOYEE_FIELDS), (PRIVATE, PRIVATE_FIELDS if private_visible else ())):
         for df in fields_for(dt, names):
@@ -90,9 +137,16 @@ def profile(employee=None):
                 continue
             schema.append(dict(name=df.fieldname, label=df.label, type=df.fieldtype, options=df.options,
                                required=bool(df.reqd), private=dt == PRIVATE))
-    return dict(schema=schema, values=read_fields(doc, EMPLOYEE_FIELDS),
-                private=read_fields(private, PRIVATE_FIELDS) if private else {},
-                attachments=read_fields(private, ("passport_copy", "permit_copy", "visa_copy")) if private else {},
+    resignation = read_fields(doc, ("resignation_letter_date", "relieving_date"))
+    return dict(full_name=doc.get("employee_name"), can_view_private=private_visible,
+                resignation=dict(letter_date=resignation.get("resignation_letter_date"),
+                                 last_day=resignation.get("relieving_date")),
+                can_record_resignation=bool(employee and doc.has_permission("write") and
+                                            all(df.permlevel == 0 for df in fields_for("Employee", ("resignation_letter_date", "relieving_date"))) and
+                                            len(fields_for("Employee", ("resignation_letter_date", "relieving_date"))) == 2),
+                schema=schema, values=read_fields(doc, EMPLOYEE_FIELDS),
+                private=private_values,
+                attachments=attachments,
                 categories=allowed, can_write=doc.has_permission("write" if employee else "create"),
                 can_private=private_visible and (private.has_permission("write") if private else frappe.has_permission(PRIVATE, "create")))
 
@@ -100,6 +154,10 @@ def profile(employee=None):
 @frappe.whitelist()
 def link_options(doctype, search=""):
     allowed = {df.options for df in fields_for("Employee", EMPLOYEE_FIELDS) if df.fieldtype == "Link"}
+    allowed.update(df.options for dt in OPERATIONS if frappe.has_permission(dt, "read")
+                   for df in operation_fields(dt) if df.fieldtype == "Link")
+    if frappe.has_permission("Shift Assignment", "read"):
+        allowed.add("Department")
     if doctype not in allowed:
         frappe.throw("Unsupported selection.", frappe.PermissionError)
     return frappe.get_list(doctype, filters={"name": ["like", "%" + str(search)[:100] + "%"]},
@@ -185,3 +243,231 @@ def upload(employee, field):
     doc.set(field, attachment.file_url)
     doc.save()
     return True
+
+
+OPERATIONS = {
+    "Attendance": ("employee", "attendance_date", "status", "shift", "leave_type"),
+    "Employee Checkin": ("employee", "log_type", "time", "device_id"),
+    "Shift Assignment": ("employee", "shift_type", "start_date", "end_date", "status"),
+    "Holiday List": ("holiday_list_name", "from_date", "to_date", "weekly_off"),
+    "Leave Policy Assignment": (
+        "employee", "leave_policy", "assignment_based_on", "leave_period",
+        "effective_from", "effective_to",
+    ),
+}
+HOLIDAY_FIELDS = ("holiday_date", "description", "weekly_off")
+
+
+def operation_fields(doctype):
+    if doctype not in OPERATIONS:
+        frappe.throw("Unsupported HR operation.", frappe.PermissionError)
+    return [df for df in fields_for(doctype, OPERATIONS[doctype]) if not df.permlevel]
+
+
+@frappe.whitelist()
+def operation_list(doctype, offset=0):
+    fields = [df.fieldname for df in operation_fields(doctype)]
+    return frappe.get_list(doctype, fields=["name", "docstatus", *fields],
+                           order_by="modified desc, name desc", start=max(0, cint(offset)),
+                           page_length=26)
+
+
+@frappe.whitelist()
+def operation_form(doctype, name=None):
+    fields = operation_fields(doctype)
+    doc = frappe.get_doc(doctype, name) if name else frappe.new_doc(doctype)
+    doc.check_permission("read" if name else "create")
+    child_fields = []
+    holidays = []
+    if doctype == "Holiday List":
+        child_fields = [df for df in fields_for("Holiday", HOLIDAY_FIELDS) if not df.permlevel]
+        holidays = [{df.fieldname: row.get(df.fieldname) for df in child_fields}
+                    for row in doc.get("holidays", [])]
+    return dict(
+        schema=[dict(name=df.fieldname, label=df.label, type=df.fieldtype,
+                     options=df.options, required=bool(df.reqd)) for df in fields],
+        child_schema=[dict(name=df.fieldname, label=df.label, type=df.fieldtype,
+                           options=df.options, required=bool(df.reqd)) for df in child_fields],
+        holidays=holidays,
+        values=read_fields(doc, [df.fieldname for df in fields]),
+        can_write=doc.docstatus == 0 and doc.has_permission("write" if name else "create"),
+        can_submit=bool(name and doc.docstatus == 0 and doc.meta.is_submittable and doc.has_permission("submit")),
+    )
+
+
+@frappe.whitelist(methods=["POST"])
+def operation_save(doctype, name=None, values=None, holidays=None, submit=False):
+    fields = {df.fieldname for df in operation_fields(doctype)}
+    values = frappe.parse_json(values) or {}
+    if not isinstance(values, dict) or values.keys() - fields:
+        frappe.throw("Unsupported field.")
+    doc = frappe.get_doc(doctype, name, for_update=True) if name else frappe.new_doc(doctype)
+    if doc.docstatus != 0:
+        frappe.throw("Only draft records can be edited.")
+    doc.check_permission("write" if name else "create")
+    doc.update(values)
+    if holidays is not None:
+        rows = frappe.parse_json(holidays)
+        allowed = {df.fieldname for df in fields_for("Holiday", HOLIDAY_FIELDS) if not df.permlevel}
+        if doctype != "Holiday List" or not isinstance(rows, list) or any(
+            not isinstance(row, dict) or row.keys() - allowed for row in rows
+        ):
+            frappe.throw("Invalid holiday rows.")
+        doc.set("holidays", rows)
+    if cint(submit):
+        if not name or not doc.meta.is_submittable:
+            frappe.throw("Save the draft before submitting.")
+        doc.check_permission("submit")
+        doc.submit()
+    else:
+        doc.save()
+    return doc.name
+
+
+@frappe.whitelist(methods=["POST"])
+def save_resignation(employee, letter_date, last_day):
+    from frappe.utils import getdate
+
+    doc = frappe.get_doc("Employee", employee, for_update=True)
+    doc.check_permission("write")
+    fields = fields_for("Employee", ("resignation_letter_date", "relieving_date"))
+    if len(fields) != 2 or any(df.permlevel for df in fields):
+        frappe.throw("Resignation date fields are unavailable.", frappe.PermissionError)
+    if not letter_date or not last_day:
+        frappe.throw("Enter both resignation dates.")
+    letter_date, last_day = getdate(letter_date), getdate(last_day)
+    if last_day < letter_date:
+        frappe.throw("Last working day cannot precede the letter date.")
+    doc.resignation_letter_date = letter_date
+    doc.relieving_date = last_day
+    doc.save()
+    return dict(letter_date=doc.resignation_letter_date, last_day=doc.relieving_date)
+
+
+@frappe.whitelist()
+def print_document_copies(employee):
+    from io import BytesIO
+
+    from PIL import Image, ImageOps
+
+    try:
+        from pypdf import PdfReader, PdfWriter
+    except ImportError:
+        from PyPDF2 import PdfReader, PdfWriter
+
+    data = profile(employee)
+    if not data["can_view_private"]:
+        frappe.throw("Confidential employee access required.", frappe.PermissionError)
+    private = private_record(employee)
+    parents = {("Employee", employee)}
+    if private:
+        parents.add((PRIVATE, private.name))
+    writer = PdfWriter()
+    for field in ("passport_copy", "permit_copy"):
+        url = data["attachments"].get(field)
+        if not isinstance(url, str) or not url.startswith("/private/files/"):
+            frappe.throw("Both private copies are required for the combined PDF.")
+        for parent_type, parent_name in parents:
+            file_id = frappe.db.get_value("File", {
+                "file_url": url, "is_private": 1, "attached_to_doctype": parent_type,
+                "attached_to_name": parent_name,
+            }, "name")
+            if file_id:
+                break
+        else:
+            frappe.throw("A document copy could not be verified.")
+        file = frappe.get_doc("File", file_id)
+        file.check_permission("read")
+        content = file.get_content()
+        if isinstance(content, str):
+            content = content.encode()
+        stream = BytesIO(content)
+        if not content.startswith(b"%PDF-"):
+            image = ImageOps.exif_transpose(Image.open(stream)).convert("RGB")
+            image.thumbnail((1600, 2200))
+            stream = BytesIO()
+            image.save(stream, format="PDF")
+            stream.seek(0)
+        for page in PdfReader(stream).pages:
+            writer.add_page(page)
+    output = BytesIO()
+    writer.write(output)
+    frappe.local.response.update(filename="passport-and-permit.pdf", filecontent=output.getvalue(),
+                                 type="download", display_content_as="inline")
+
+
+@frappe.whitelist()
+def attendance_calendar(month, offset=0):
+    from calendar import monthrange
+    from datetime import date
+
+    try:
+        year, number = map(int, month.split("-"))
+        start = date(year, number, 1)
+        days = monthrange(year, number)[1]
+    except (ValueError, AttributeError):
+        frappe.throw("Choose a valid month.")
+    if not frappe.has_permission("Attendance", "read"):
+        frappe.throw("Attendance access required.", frappe.PermissionError)
+    employees = frappe.get_list("Employee", filters={"date_of_joining": ["<=", date(year, number, days)]},
+                                fields=["name", "employee_name", "department"],
+                                order_by="employee_name asc, name asc", start=max(0, cint(offset)), page_length=26)
+    roster = employees[:25]
+    entries = frappe.get_list("Attendance", filters={
+        "employee": ["in", [row.name for row in roster]],
+        "attendance_date": ["between", [start, date(year, number, days)]],
+        "docstatus": 1,
+    }, fields=["employee", "attendance_date", "status"], page_length=0) if roster else []
+    return dict(employees=roster, entries=entries, days=days, has_more=len(employees) > 25)
+
+
+@frappe.whitelist()
+def shift_week(start=None, department=None, offset=0):
+    from datetime import timedelta
+
+    from frappe.utils import getdate
+
+    if not frappe.has_permission("Shift Assignment", "read"):
+        frappe.throw("Shift assignment access required.", frappe.PermissionError)
+    start = getdate(start or today())
+    start -= timedelta(days=start.weekday())
+    end = start + timedelta(days=6)
+    filters = {"status": "Active", "date_of_joining": ["<=", end]}
+    if department:
+        filters["department"] = department
+    people = frappe.get_list("Employee", filters=filters,
+                             fields=["name", "employee_name", "department", "designation"],
+                             order_by="employee_name asc, name asc", start=max(0, cint(offset)), page_length=26)
+    roster = people[:25]
+    assignments = frappe.get_list("Shift Assignment", filters={
+        "employee": ["in", [row.name for row in roster]], "start_date": ["<=", end],
+        "docstatus": 1, "status": "Active",
+    }, or_filters=[["end_date", ">=", start], ["end_date", "is", "not set"]],
+        fields=["name", "employee", "shift_type", "start_date", "end_date"],
+        order_by="start_date asc", page_length=0) if roster else []
+    return dict(start=start, days=[start + timedelta(days=i) for i in range(7)], employees=roster,
+                assignments=assignments, has_more=len(people) > 25)
+
+
+@frappe.whitelist()
+def payroll_register(month, offset=0):
+    from calendar import monthrange
+    from datetime import date
+
+    try:
+        year, number = map(int, month.split("-"))
+        start = date(year, number, 1)
+        end = date(year, number, monthrange(year, number)[1])
+    except (AttributeError, ValueError):
+        frappe.throw("Choose a valid month.")
+    if not frappe.has_permission("Salary Slip", "read"):
+        frappe.throw("Payroll access required.", frappe.PermissionError)
+    filters = {"end_date": ["between", [start, end]], "docstatus": ["<", 2]}
+    slips = frappe.get_list("Salary Slip", filters=filters,
+                            fields=["name", "employee", "employee_name", "department", "currency",
+                                    "gross_pay", "total_deduction", "net_pay", "docstatus"],
+                            order_by="employee_name asc, name asc", start=max(0, cint(offset)), page_length=26)
+    runs = frappe.get_list("Payroll Entry", filters=filters,
+                           fields=["name", "company", "start_date", "end_date", "docstatus"],
+                           order_by="start_date desc", page_length=15) if frappe.has_permission("Payroll Entry", "read") else []
+    return dict(slips=slips, runs=runs)

@@ -1,0 +1,17 @@
+{% extends "frappe/www/login.html" %}
+{% block head_include %}
+{{ super() }}
+<style>
+html body, .web-footer, .page_content {background:#f4f2ed}
+body .for-login,body .for-forgot,body .for-signup,body .for-login-with-email-link{width:min(100% - 32px,520px);margin:8vh auto;padding:36px;border:1px solid #e4e0d8;border-radius:17px;background:#fff;box-shadow:0 12px 40px #2824180c}
+body .page-card-head{text-align:left;padding:0;margin:0 0 24px}
+body .page-card-head img{max-width:210px;max-height:64px;width:auto;height:auto;object-fit:contain;margin:0 0 20px}
+body .page-card-head img[src=""]{display:none}
+body .page-card-head h4{font-size:25px;color:#25241f;letter-spacing:-.03em}
+body .page-card{max-width:none;padding:0;box-shadow:none;border:0;background:transparent}
+body .page-card-body .form-control{background:#fbfaf7;border:1px solid #e0dcd4;border-radius:8px;min-height:48px;color:#25241f}
+body .page-card-actions .btn-primary{background:#25584e;color:#fff;min-height:48px;border-radius:8px}
+body .forgot-password-message a{color:#25584e}
+body .for-login .form-label.sr-only{position:static;width:auto;height:auto;clip:auto;margin:0 0 6px;display:block;font-weight:600}
+</style>
+{% endblock %}

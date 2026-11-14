@@ -2,12 +2,15 @@
   "use strict";
   if(window.__balajiVaultInstalled)return;
   window.__balajiVaultInstalled=true;
+  const standalone = document.querySelector("[data-balaji-vault-token]");
+  const privateWindow = standalone?.dataset.vaultWindow === "true";
+  const csrfToken = () => standalone?.dataset.balajiVaultToken || window.frappe?.csrf_token || "";
   const base = "/api/method/balaji_hr.vault.";
   const escape = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   let presses=0, last=0, shiftDown=false, overlay=null, timer=null, employees=[], companies=[], current=null, opened=false;
   let generation=0, lastPing=0;
   async function rpc(method, data={}) {
-    const response = await fetch(base+method, {method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json","X-Frappe-CSRF-Token":window.frappe?.csrf_token || ""},body:JSON.stringify(data)});
+    const response = await fetch(base+method, {method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json","X-Frappe-CSRF-Token":csrfToken()},body:JSON.stringify(data)});
     let result={};try{result=await response.json();}catch{}
     if(!response.ok || result.exc) {
       if(opened && response.status===403) close();
@@ -21,9 +24,9 @@
   function error(message) {const el=overlay?.querySelector(".bv-error");if(el)el.textContent=message;}
   function touch(){if(!opened)return;clearTimeout(timer);timer=setTimeout(close,300000);if(Date.now()-lastPing>45000){lastPing=Date.now();rpc("keepalive").catch(()=>close());}}
   function clearMemory(){employees=[];companies=[];current=null;}
-  function close(){generation++;opened=false;clearTimeout(timer);overlay?.remove();overlay=null;clearMemory();fetch(base+"lock",{method:"POST",credentials:"same-origin",cache:"no-store",keepalive:true,headers:{"Content-Type":"application/json","X-Frappe-CSRF-Token":window.frappe?.csrf_token||""},body:"{}"}).catch(()=>{});}
+  function close(){generation++;opened=false;clearTimeout(timer);overlay?.remove();overlay=null;clearMemory();fetch(base+"lock",{method:"POST",credentials:"same-origin",cache:"no-store",keepalive:true,headers:{"Content-Type":"application/json","X-Frappe-CSRF-Token":csrfToken()},body:"{}"}).catch(()=>{});}
   function openPrompt(){
-    if(overlay || !window.frappe || frappe.session?.user==="Guest")return;
+    if(overlay || (!standalone && (!window.frappe || frappe.session?.user==="Guest")))return;
     overlay=element("div",{id:"balaji-vault-overlay"});
     overlay.innerHTML=`<div class="bv-unlock"><div class="bv-lock-symbol">◈</div><span class="bv-eyebrow">SECURE ACCESS</span><h1>Enter your password</h1><p>Unlock your private workspace.</p><form><label>Password<input type="password" name="password" required autocomplete="current-password" maxlength="200"></label><p class="bv-error" role="alert"></p><button class="bv-primary" type="submit">Unlock workspace →</button><button type="button" class="bv-cancel">Cancel</button></form></div>`;
     document.body.appendChild(overlay);
@@ -77,7 +80,7 @@
     current=record;const root=frame(record.name?record.employee_name:"New private employee","A simplified employee form. No extra ERPNext fields.");
     root.innerHTML=`<form class="bv-panel bv-employee-form"><h2>Employee details</h2><div class="bv-grid">${fields.map(([key,label,type="text",required=false])=>`<label>${escape(label)}${required?' <em>*</em>':''}${type==="company"||type==="category"?`<select name="${key}" ${required?'required':''}>${(type==="company"?companies:["Local","Foreign","Other"]).map(value=>`<option value="${escape(value)}" ${value===(record[key] || (type==="company"?companies[0]:"Local"))?'selected':''}>${escape(value)}</option>`).join("")}</select>`:`<input name="${key}" type="${type}" value="${escape(record[key])}" ${type==="number"?'step="0.01" min="0"':''} ${required?'required':''}>`}</label>`).join("")}</div><div class="bv-form-footer"><span>Only authorised vault users can save these records.</span><button class="bv-primary" type="submit">Save employee →</button></div></form><section class="bv-panel"><h2>Passport copy</h2>${record.name?'<label>Private image or PDF (maximum 10 MB)<input type="file" class="bv-upload" accept=".png,.jpg,.jpeg,.pdf"></label>':'<p>Save this employee first, then attach their passport copy.</p>'}${record.passport_copy?'<button class="bv-download">Download passport copy</button>':''}</section>`;
     root.querySelector("form").onsubmit=event=>{event.preventDefault();guard(async()=>{const data=Object.fromEntries(new FormData(event.target));if(current.name){data.name=current.name;data.modified=current.modified;}const stamp=generation;const saved=await rpc("save_employee",{data});if(!opened||stamp!==generation)return;const updated=await rpc("employee",{name:saved.name});if(opened&&stamp===generation)employeeForm(updated);});};
-    const upload=root.querySelector(".bv-upload");if(upload)upload.onchange=()=>guard(async()=>{if(!upload.files[0])return;const stamp=generation;const form=new FormData();form.append("file",upload.files[0]);form.append("employee_name",current.name);const response=await fetch(base+"upload_passport",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"X-Frappe-CSRF-Token":frappe.csrf_token},body:form});if(!response.ok)throw new Error("Upload failed. Check file type, size and vault access.");const record=await rpc("employee",{name:current.name});if(opened&&stamp===generation)employeeForm(record);});
+    const upload=root.querySelector(".bv-upload");if(upload)upload.onchange=()=>guard(async()=>{if(!upload.files[0])return;const stamp=generation;const form=new FormData();form.append("file",upload.files[0]);form.append("employee_name",current.name);const response=await fetch(base+"upload_passport",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"X-Frappe-CSRF-Token":csrfToken()},body:form});if(!response.ok)throw new Error("Upload failed. Check file type, size and vault access.");const record=await rpc("employee",{name:current.name});if(opened&&stamp===generation)employeeForm(record);});
     const download=root.querySelector(".bv-download");if(download)download.onclick=()=>guard(async()=>{const response=await fetch(base+"download_passport?employee_name="+encodeURIComponent(current.name),{credentials:"same-origin",cache:"no-store"});if(!response.ok)throw new Error("Download denied or vault locked.");const blob=await response.blob();const url=URL.createObjectURL(blob);const a=element("a",{href:url,download:"passport-copy"});a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
   }
   function employeeOptions(){return employees.map(x=>`<option value="${escape(x.name)}">${escape(x.employee_name)}</option>`).join("");}
@@ -95,7 +98,7 @@
   }
   // Shortcut v0.2.1: capture before Desk handlers, including when an input has focus.
   window.addEventListener("keydown",event=>{
-    if(event.key==="Escape" && overlay){event.preventDefault();close();return;}
+    if(event.key==="Escape" && overlay){event.preventDefault();event.stopImmediatePropagation();close();return;}
     if(event.repeat || overlay)return;
     const key=event.key;
     const now=Date.now();
@@ -109,11 +112,19 @@
       presses=0;
       event.preventDefault();
       event.stopImmediatePropagation?.();
-      openPrompt();
+      if(standalone && !privateWindow){
+        const popup=window.open("/balaji-private","balaji_private_office","popup,width=1120,height=800");
+        if(popup)popup.focus();
+        else window.location.assign("/balaji-private");
+      }else openPrompt();
       return;
     }
     presses=0;
   },true);
+  if(privateWindow){
+    document.querySelector("#vault-reopen")?.addEventListener("click",openPrompt);
+    openPrompt();
+  }
   document.addEventListener("visibilitychange",()=>{if(document.hidden && overlay)close();});
   window.addEventListener("pagehide",()=>{if(overlay)close();});
 })();

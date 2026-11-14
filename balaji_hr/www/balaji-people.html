@@ -5,9 +5,138 @@
 <title>Balaji Enterprises HRMS</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f2f5f7;color:#172d37;font:16px/1.5 system-ui,sans-serif}button,input,select{font:inherit}button,a{cursor:pointer}button:disabled{cursor:default;opacity:.5}a{color:inherit}header{background:#132e37;color:white;padding:20px clamp(18px,5vw,68px);display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap}header strong{font-size:21px}nav{display:flex;gap:8px;flex-wrap:wrap}button,.button{border:1px solid #b9c9cc;border-radius:9px;padding:9px 15px;background:white;color:#17323d;text-decoration:none}nav button{background:transparent;color:white;border-color:transparent}nav button[aria-current=true]{background:#30505b}main{max-width:1240px;margin:auto;padding:38px 20px}h1{font-size:clamp(26px,4vw,38px);line-height:1.2;margin:0 0 8px}h2{font-size:21px;margin:0 0 18px}.muted{color:#526a74}.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0}.primary{background:#136854;border-color:#136854;color:white}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:16px;margin:26px 0}.card,section,fieldset{background:white;border:1px solid #d9e3e7;border-radius:14px;padding:22px}.card{border-top:4px solid #36a68e}.card strong{display:block;font-size:34px;line-height:1.2;margin-bottom:6px}.table{overflow:auto}table{border-collapse:collapse;width:100%}td,th{padding:12px;text-align:left;border-bottom:1px solid #e3eaed;white-space:nowrap}th{font-size:14px;color:#526a74}td button{padding:0;border:0;color:#136854;text-decoration:underline}input,select,textarea{border:1px solid #b9c9cc;border-radius:8px;padding:9px 11px;background:white;color:#172d37;min-width:0;max-width:100%}fieldset{margin:18px 0;min-width:0}legend{font-size:18px;font-weight:650;padding:0 8px}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}label{display:grid;gap:6px}label input[type=checkbox]{justify-self:start}.error{color:#992c2c}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #37a990;outline-offset:2px}
+
+ 
+:root{color-scheme:light}body{background:#fff;color:#172638;min-height:100vh}header{background:#fff;color:#172638;border-bottom:1px solid #e3e9ef}main{max-width:1360px}.muted,th{color:#5a6a80}button,.button,input,select,textarea{background:#fff;color:#172638;border-color:#cbd5e1}nav button{color:#253951}nav button[aria-current=true]{background:#edf4ff;color:#164c92}.primary{background:#174983;color:#fff;border-color:#174983;font-weight:650}.card,section,fieldset{background:#fff;border-color:#e0e7ef;box-shadow:0 5px 20px #112e4c0a}.card{border-top-color:#2d65a8}.card strong{color:#183e70}td,th{border-color:#e6edf4}td button{background:transparent;color:#174983}.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0}.tool{text-align:left;padding:20px;min-height:108px;border-radius:14px;background:#f7faff}.tool strong{display:block;color:#183e70;font-size:18px;margin-bottom:6px}.tool span{color:#52657b}.tool:hover{background:#eef5ff}.doc-preview{display:block;max-width:min(100%,360px);max-height:250px;object-fit:contain;margin:10px 0;border-radius:8px}.holiday-row{margin:12px 0;align-items:end}#overview-back{position:sticky;top:8px;z-index:1;margin-bottom:20px;box-shadow:0 2px 8px #10203018}kbd{font-size:.82em;color:#52657b}.employee-documents{margin:20px 0}.employee-documents details{margin:16px 0}.employee-documents summary{cursor:pointer;font-weight:650;margin-bottom:12px}
+dialog{border:1px solid #d4dde7;border-radius:12px;width:min(920px,95vw);max-height:92vh;padding:20px;color:#172638;background:#fff}dialog::backdrop{background:#14223666}.print-sheet{background:#fff;color:#111;padding:26px}.print-sheet header{display:flex;padding:0 0 10px;color:#183e70;background:#fff;border-bottom:2px solid #183e70}.print-sheet h1{margin:24px 0 2px}.print-sheet dl>div{display:grid;grid-template-columns:1fr 1.5fr;padding:7px 0;border-bottom:1px solid #e5e9ef}.print-sheet dt{font-weight:650}.print-sheet dd{margin:0;overflow-wrap:anywhere}.print-copies,.signatures{display:grid;grid-template-columns:1fr 1fr;gap:18px}.print-copies img{width:100%;height:135mm;object-fit:contain;object-position:top center}.signature{border-top:1px solid #435366;margin-top:55px;padding-top:6px;max-width:240px}
+@media print{@page{size:A4;margin:12mm}body>header,body>main,.print-controls{display:none!important}body{min-height:0}dialog[open]{position:static;width:100%;max-width:none;max-height:none;overflow:visible;border:0;padding:0;margin:0}dialog::backdrop{display:none}.print-sheet{padding:0}.print-copies article,.signature{break-inside:avoid}}
+ 
+:root{--paper:#f5f3ee;--ink:#24241e;--line:#e6e1d7;--green:#25584e}body{background:var(--paper);color:var(--ink)}.workspace-side{position:fixed;inset:0 auto 0 0;width:246px;padding:22px 14px;border-right:1px solid var(--line);background:var(--paper);overflow:auto}.workspace-brand{display:flex;align-items:center;gap:11px;padding:4px 8px 23px;border-bottom:1px solid var(--line)}.workspace-brand span,.avatar{display:inline-grid;place-items:center;border-radius:10px;background:#dfede5;color:#25584e;width:37px;height:37px;flex:none;font-weight:700}.workspace-brand small{display:block;font-size:12px;font-weight:400;color:#625f56}.workspace-side nav{display:block}.workspace-side nav p{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.11em;color:#6d695f;margin:24px 8px 6px}.workspace-side nav button,.workspace-side nav a{display:block;text-align:left;width:100%;border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 10px;text-decoration:none}.workspace-side nav [hidden]{display:none}.workspace-side nav button[aria-current=true],.primary{background:#24241e;color:white;border-color:#24241e}.workspace-top{margin-left:246px;background:var(--paper);padding:16px 30px;border-color:var(--line);min-height:62px;color:#615d53}body>main{margin-left:246px;padding:26px 30px;max-width:none}.hero{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px}.hero h1{font-size:32px}.cards{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden}.card{display:flex;flex-direction:column;gap:8px;border:0;border-right:1px solid var(--line);border-radius:0;padding:20px;background:#fffdfa;box-shadow:none}.card strong{color:#24241e;margin:0}.card span{font-size:12px;color:#625f56;text-transform:uppercase;letter-spacing:.06em}.dashboard-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}.dashboard-grid section{padding:0;background:#fffdfa;border-color:var(--line);box-shadow:none}.dashboard-grid h2{padding:15px 18px;margin:0;border-bottom:1px solid var(--line);font-size:16px}.feed{margin:0;padding:5px 18px;list-style:none}.feed li{padding:11px 0;border-bottom:1px solid var(--line)}.feed li:last-child{border:0}.feed small{display:block;color:#625f56}.feed button{border:0;padding:0;background:none;text-align:left;color:var(--green)}.badge{border-radius:30px;background:#e2eee7;padding:3px 8px;color:#20584a}.employee-cell{display:flex;gap:10px;align-items:center}.employee-cell small{display:block;color:#625f56}.table thead{background:#f2efe7}body>main section{border-color:var(--line)}.tool{background:#fffdfa}.tool strong{color:var(--green)}.calendar th:first-child,.calendar td:first-child{position:sticky;left:0;background:#fffdfa;z-index:1}.calendar td:not(:first-child){text-align:center}.calendar .dot{font-size:19px}.calendar [data-status="Present"]{color:#28765b}.calendar [data-status="Absent"]{color:#ac3d3d}.calendar [data-status="On Leave"]{color:#366e94}.calendar [data-status="Half Day"]{color:#9a681d}
+@media(max-width:800px){.workspace-side{position:static;width:auto;border-right:0;border-bottom:1px solid var(--line)}.workspace-side nav,.workspace-side nav #operation-nav{display:flex;flex-wrap:wrap}.workspace-side nav p{display:none}.workspace-side nav button,.workspace-side nav a{width:auto}.workspace-top,body>main{margin-left:0;padding:16px}.dashboard-grid{grid-template-columns:1fr}.hero{align-items:flex-start}}
+@media print{.workspace-side{display:none!important}}
+.workspace-side{width:208px}.workspace-top,body>main{margin-left:208px}.workspace-side nav button,.workspace-side nav a{padding:6px 8px;font-size:14px}.workspace-side nav p{margin-top:16px}.roster .shift-tag{padding:4px 8px;border-radius:5px;background:#dceee6;color:#214e40;text-decoration:none}.roster td,.roster th{padding:9px}.roster td:first-child,.roster th:first-child{position:sticky;left:0;background:#fffdfa}.roster{margin-top:12px}@media(max-width:800px){.workspace-side{width:auto}.workspace-top,body>main{margin-left:0}}
+
+/* Align workspace content and keep wide registers inside their own scroll area. */
+@media screen {
+  :root {
+    --workspace-sidebar: 208px;
+    --workspace-gutter: clamp(16px, 3vw, 40px);
+    --workspace-gap: 16px;
+    --control-height: 42px;
+  }
+
+  .workspace-side { width: var(--workspace-sidebar); }
+  .workspace-top,
+  body > main {
+    margin-left: var(--workspace-sidebar);
+    padding-inline: var(--workspace-gutter);
+  }
+  .workspace-top { gap: 8px 20px; }
+  .workspace-top > span { overflow-wrap: anywhere; }
+  #workspace-user { margin-left: auto; text-align: right; }
+  #notice:empty { display: none; }
+  #screen, section, fieldset, .dashboard-grid > *, .fields > * { min-width: 0; }
+  #screen h1, #screen h2, .feed li, .tool { overflow-wrap: anywhere; }
+
+  .hero { flex-wrap: wrap; margin-bottom: 20px; }
+  .hero p, #screen > h1 + p { margin: 6px 0 0; }
+  #screen > h1 + button { margin-top: 8px; }
+  .hero > button { flex: none; }
+
+  .cards {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 155px), 1fr));
+    gap: var(--workspace-gap);
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .card {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    justify-content: space-between;
+  }
+  .card strong { font-size: clamp(22px, 2.5vw, 32px); overflow-wrap: anywhere; }
+  .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tools { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+  .tool { display: grid; align-content: start; }
+
+  .bar { gap: 10px 12px; align-items: flex-end; }
+  .bar > label { flex: 0 1 auto; min-width: 0; max-width: 100%; }
+  .bar button, .bar input:not([type="checkbox"]), .bar select,
+  .fields input:not([type="checkbox"]), .fields select, .fields textarea,
+  .holiday-row > button {
+    min-height: var(--control-height);
+    font: inherit;
+    line-height: 1.25;
+  }
+  .bar [data-week] { min-width: var(--control-height); padding-inline: 8px; }
+  .fields {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: var(--workspace-gap);
+    align-items: end;
+  }
+  .fields label { min-width: 0; overflow-wrap: anywhere; }
+  .fields input:not([type="checkbox"]), .fields select, .fields textarea { width: 100%; }
+  .fields input[type="checkbox"] { margin: 0 0 13px; width: 16px; height: 16px; }
+  .results .bar:first-child { margin-top: 0; }
+  .results > .bar:last-child, section > .bar:last-child { margin-bottom: 0; }
+  #screen > button + .results { margin-top: 12px; }
+  #payroll-results > .bar + .cards { margin-top: 0; }
+
+  .table { max-width: 100%; }
+  th, td { vertical-align: middle; }
+  .table td button, .table td a {
+    display: inline-block;
+    max-width: 30ch;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: inherit;
+  }
+  .calendar th:not(:first-child), .calendar td:not(:first-child),
+  .roster th:nth-child(n+4), .roster td:nth-child(n+4) { text-align: center; }
+  .calendar th:first-child, .calendar td:first-child,
+  .roster th:first-child, .roster td:first-child {
+    min-width: 150px;
+    max-width: 220px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    z-index: 1;
+    box-shadow: 1px 0 var(--line);
+  }
+  .calendar th:first-child, .roster th:first-child { background: #f2efe7; }
+  .roster .shift-tag { margin-block: 2px; }
+  [data-view-name="payroll"] #payroll-results section:last-child :is(th, td):nth-child(n+3):nth-child(-n+5) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 800px) {
+    :root { --workspace-sidebar: 0px; }
+    .workspace-side { width: auto; padding: 12px var(--workspace-gutter); }
+    .workspace-brand { padding: 0 0 10px; margin-bottom: 8px; }
+    .workspace-side nav, .workspace-side nav > div { gap: 4px; }
+    .workspace-side nav > div:not([hidden]) { display: flex; flex-wrap: wrap; }
+    .workspace-side nav > div[hidden] { display: none !important; }
+    .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  @media (max-width: 480px) {
+    .workspace-top { align-items: flex-start; flex-direction: column; }
+    #workspace-user { margin-left: 0; text-align: left; }
+    #screen :is(section, fieldset) { padding: 14px; }
+    #screen .dashboard-grid section { padding: 0; }
+    .bar input, .bar select { max-width: 100%; }
+    dialog { padding: 12px; }
+    .print-sheet { padding: 12px; }
+    .print-copies, .signatures, .print-sheet dl > div { grid-template-columns: minmax(0, 1fr); }
+  }
+}
 </style>
-<header><strong>Balaji Enterprises HRMS</strong><nav aria-label="Main navigation"><button data-view="overview">Overview</button><button data-view="employees">Employees</button><button data-view="reports" hidden>Expiry reports</button></nav></header>
-<main><p id="notice" role="status"></p><div id="screen"></div></main>
+<aside class="workspace-side"><div class="workspace-brand"><span>BE</span><strong>Balaji Enterprises<small>People workspace</small></strong></div><nav aria-label="Main navigation"><p>Workspace</p><button data-view="overview">⌂ &nbsp; Dashboard</button><button data-view="employees">♙ &nbsp; Employees</button><p>Attendance &amp; leave</p><div id="operation-nav"></div><div id="payroll-nav" hidden><p>Payroll</p><button data-view="payroll">▤ &nbsp; Payroll register</button></div><p>Reports &amp; settings</p><button data-view="reports" hidden>▤ &nbsp; Expiry reports</button><a id="company-settings" hidden>⚙ &nbsp; Company settings</a></nav></aside>
+<header class="workspace-top"><span id="workspace-path">Workspace · Dashboard</span><span id="workspace-user"></span></header>
+<main><button id="overview-back" type="button" data-view="overview" hidden>← Overview <kbd>O / Esc</kbd></button><p id="notice" role="status"></p><div id="screen"></div></main>
+<dialog id="print-dialog" aria-label="Employee document preview"><div class="bar print-controls"><button type="button" id="print-close">Close preview</button><button type="button" class="primary" id="print-now">Print / Save PDF</button></div><div class="print-sheet"></div></dialog>
 <script>
 "use strict";
 const csrf = {{ csrf_token | tojson }};
@@ -17,7 +146,7 @@ const escape = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp
 const e = escape;
 let access, viewId = 0;
 async function api(method, args = {}, write = false) {
-  const query = new URLSearchParams(args);
+  const query = new URLSearchParams(Object.entries(args).filter(([,value])=>value!=null));
   const response = await fetch("/api/method/balaji_hr.people." + method + (write ? "" : "?" + query), {
     method: write ? "POST" : "GET", headers: write ? {"Content-Type":"application/json","X-Frappe-CSRF-Token":csrf} : {},
     body: write ? JSON.stringify(args) : undefined, cache:"no-store"
@@ -30,22 +159,40 @@ const table = (headers, rows) => rows.length ? '<div class="table"><table><thead
 function showError(error){notice.className="error";notice.textContent=error.message;}
 function view(name, employee) {
   const id = ++viewId;
+  screen.dataset.viewName = name;
+  document.querySelector("#overview-back").hidden=name==="overview";
   notice.textContent="";
+  document.querySelector("#workspace-path").textContent="Workspace · "+({overview:"Dashboard",employees:"Employees",profile:"Employee profile",reports:"Expiry reports",payroll:"Payroll",operation:operationLabels[employee]}[name]||"");
   screen.innerHTML="<p>Loading…</p>";
-  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",String(b.dataset.view===name)));
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",String(b.dataset.view===name && (name!=="operation" || b.dataset.employee===employee))));
   const render = html => {if(id===viewId) screen.innerHTML=html; return id===viewId;};
-  ({overview,employees,reports,profile}[name])(render, employee).catch(error=>{if(id===viewId){render("");showError(error);}});
+  ({overview,employees,reports,profile,operation,payroll}[name])(render, employee).catch(error=>{if(id===viewId){render("");showError(error);}});
 }
 function addButton(){return access?.can_create ? '<button class="primary" data-view="profile">Add employee</button>' : '';}
 async function overview(render){
-  access=await api("overview");
-  document.querySelector('[data-view=reports]').hidden=!access.can_expiry;
-  render('<h1>People overview</h1><p class="muted">Staffing, attendance and leave at a glance.</p><div class="bar">'+addButton()+'<button data-view="employees">View employees</button></div><div class="cards">'+access.cards.map(c=>'<article class="card"><strong>'+e(c.value)+'</strong>'+e(c.label)+'</article>').join('')+'</div>'+(access.can_expiry?'<section><h2>Upcoming document expiries</h2><p>Review permits, passports and visas due in the next 30 days.</p><button data-view="reports">Open expiry reports</button></section>':''));
+  const data=await api("overview");
+  const feed=(rows,fn,empty)=>'<ul class="feed">'+(rows.length?rows.map(row=>'<li>'+fn(row)+'</li>').join(""):'<li class="muted">'+e(empty)+'</li>')+'</ul>';
+  const quick=(data.operations||[]).map(dt=>'<button class="tool" data-view="operation" data-employee="'+e(dt)+'"><strong>'+e(operationLabels[dt])+'</strong><span>'+e(operationDescriptions[dt])+'</span></button>').join("");
+  const first=(data.user||"").split(" ")[0];
+  if(!render('<div class="hero"><div><h1>Welcome back, '+e(first)+'</h1><p class="muted">'+e(data.date)+' · Your people workspace</p></div>'+(data.can_create?'<button class="primary" data-view="profile">＋ Add employee</button>':'')+'</div>'+
+    '<div class="cards">'+data.cards.map(c=>'<article class="card"><span>'+e(c.label)+'</span><strong>'+e(c.value)+'</strong></article>').join("")+'</div>'+
+    '<div class="dashboard-grid"><section><h2>Recent joiners</h2>'+feed(data.recent,r=>profileButton(r.name,r.employee_name)+'<small>'+e([r.designation,r.date_of_joining].filter(Boolean).join(" · "))+'</small>',"No recent joiners to show.")+'</section>'+
+    '<section><h2>Pending leave requests</h2>'+feed(data.requests,r=>'<strong>'+e(r.employee_name)+'</strong><small>'+e(r.leave_type)+' · '+e(r.from_date)+' to '+e(r.to_date)+'</small>',"No open requests to show.")+'</section>'+
+    (data.can_expiry?'<section><h2>Upcoming document expiries</h2>'+feed(data.upcoming,r=>profileButton(r.employee,r.name)+'<small>'+e(r.document)+' · '+e(r.expiry)+'</small>',"No document expiries in the next 30 days.")+'</section>':'')+
+    '</div><h2 style="margin-top:24px">Quick actions</h2><div class="tools">'+quick+'</div>'))return;
+  access=data;
+  document.querySelector("#payroll-nav").hidden=!data.can_payroll;
+  document.querySelector("nav [data-view=reports]").hidden=!data.can_expiry;
+  document.querySelector("#workspace-user").textContent=data.user||"";
+  document.querySelector("#operation-nav").innerHTML=(data.operations||[]).map(dt=>'<button data-view="operation" data-employee="'+e(dt)+'">'+e(operationLabels[dt])+'</button>').join("");
+  const settings=document.querySelector("#company-settings");
+  settings.hidden=!data.settings_company;
+  if(data.settings_company)settings.href="/app/company/"+encodeURIComponent(data.settings_company);
 }
 function pagination(offset, count){return '<div class="bar"><button data-step="-25" '+(offset?'':'disabled')+'>Previous</button><button data-step="25" '+(count>25?'':'disabled')+'>Next</button></div>';}
 async function employees(render){
   if(!render('<h1>Employees</h1><p class="muted">Search and open employee profiles.</p><form class="bar"><input name="search" aria-label="Employee name" placeholder="Search employee name"><select name="category" aria-label="Category"><option value="">All categories</option><option>Local</option><option>Foreign</option><option>Other</option></select><button>Search</button>'+addButton()+'</form><section class="results"></section>'))return;
-  await results("employees", r=>['Employee','ID','Department','Designation','Category','Status'], r=>[profileButton(r.name,r.employee_name),...["name","department","designation","custom_balaji_category","status"].map(k=>e(r[k]))]);
+  await results("employees", r=>['Employee','ID','Department','Designation','Category','Status'], r=>['<div class="employee-cell"><span class="avatar">'+e((r.employee_name||"").split(/\s+/).slice(0,2).map(w=>w[0]).join(""))+'</span><div>'+profileButton(r.name,r.employee_name)+'<small>'+e(r.name)+'</small></div></div>',...["name","department","designation","custom_balaji_category"].map(k=>e(r[k])),'<span class="badge">'+e(r.status)+'</span>']);
 }
 async function reports(render){
   if(!render('<h1>Expiry reports</h1><p class="muted">Review upcoming expiry dates by document type.</p><form class="bar"><select name="kind" aria-label="Document type"><option value="permit_expiry_date">Work permits</option><option value="passport_expiry_date">Passports</option><option value="visa_expiry_date">Visas</option></select><select name="days" aria-label="Time window"><option>30</option><option>60</option><option>90</option></select><button>Run report</button></form><section class="results"></section>'))return;
@@ -86,11 +233,13 @@ async function profile(render,employee){
   }
   if(!render('<h1>'+e(employee?p.values.first_name||employee:"Add employee")+'</h1><button data-view="employees">Back to employees</button><form>'+groups.filter(g=>g[1].length).map(([label,fields])=>'<fieldset><legend>'+e(label)+'</legend><div class="fields">'+fields.map(field).join('')+'</div></fieldset>').join('')+(p.can_write?'<button class="primary">Save employee</button>':'')+'</form>'))return;
   const form=screen.querySelector("form");
+  addFieldNavigation(form);
+  if(employee)employeeDocuments(p,employee,form);
   if(employee&&(p.can_private||Object.values(p.attachments).some(Boolean))){
     const files=document.createElement("section");
     files.innerHTML='<h2>Confidential documents</h2>'+Object.entries({passport_copy:"Passport copy",permit_copy:"Permit copy",visa_copy:"Visa copy"}).map(([key,label])=>{
       const url=p.attachments[key];
-      if(url?.startsWith("/private/files/"))return '<p><a href="'+e(url)+'" target="_blank" rel="noopener">'+e(label)+'</a></p>';
+      if(url?.startsWith("/private/files/"))return '<p><a href="'+e(url)+'" target="_blank" rel="noopener">'+e(label)+(/\.(png|jpe?g)(?:$|\?)/i.test(url)?'<img class="doc-preview" src="'+e(url)+'" alt="'+e(label)+'" loading="lazy">':'')+'</a></p>';
       return p.can_private?'<form class="bar" data-upload="'+key+'"><label>'+e(label)+'<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required></label><button>Attach privately</button></form>':'';
     }).join('');
     form.after(files);
@@ -130,6 +279,368 @@ async function profile(render,employee){
   });
 }
 document.addEventListener("click",event=>{const b=event.target.closest("[data-view]");if(b){event.preventDefault();view(b.dataset.view,b.dataset.employee);}});
+const operationLabels = {
+  Attendance: "Attendance",
+  "Employee Checkin": "Check-in / Check-out",
+  "Shift Assignment": "Shift assignments",
+  "Holiday List": "Holiday lists",
+  "Leave Policy Assignment": "Leave assignments"
+};
+const operationDescriptions = {
+  Attendance: "Review daily presence and record attendance.",
+  "Employee Checkin": "Review punch logs and record IN or OUT events.",
+  "Shift Assignment": "Assign a shift and effective dates.",
+  "Holiday List": "Set holiday calendars and dates.",
+  "Leave Policy Assignment": "Assign a leave policy and effective period."
+};
+async function operation(render, dt, record, editing=false){
+  const title=operationLabels[dt];
+  if(!title)throw Error("Unsupported operation.");
+  if(!render('<h1>'+e(title)+'</h1><p class="muted">'+e(operationDescriptions[dt])+'</p><div class="bar"><button data-view="overview">Dashboard</button>' +(access?.operation_create?.includes(dt)?'<button id="new-operation" class="primary">New record</button>':'')+ '</div><section class="results"></section>'))return;
+  const add=screen.querySelector("#new-operation");
+  if(add)add.onclick=()=>openOperation(dt,null);
+  const panel=screen.querySelector(".results");
+  let offset=0, request=0;
+  async function load(){
+    const seq=++request;
+    panel.textContent="Loading…";
+    try{
+      const rows=await api("operation_list",{doctype:dt,offset});
+      if(!panel.isConnected||seq!==request)return;
+      const columns=Object.keys(rows[0]||{}).filter(key=>!["name","docstatus"].includes(key)).slice(0,6);
+      panel.innerHTML=table(["Record","State",...columns.map(k=>k.replaceAll("_"," "))],rows.slice(0,25).map(row=>[
+        '<button data-operation-record="'+e(row.name)+'">'+e(row.name)+'</button>',
+        e(dt==="Employee Checkin"||dt==="Holiday List"?"Saved":({0:"Draft",1:"Submitted",2:"Cancelled"}[row.docstatus]||"Saved")),
+        ...columns.map(k=>e(row[k]))
+      ]))+pagination(offset,rows.length);
+    }catch(error){if(panel.isConnected&&seq===request){panel.textContent="";showError(error);}}
+  }
+  panel.onclick=event=>{
+    const record=event.target.closest("[data-operation-record]");
+    if(record)openOperation(dt,record.dataset.operationRecord);
+    const step=event.target.closest("[data-step]");
+    if(step){offset+=Number(step.dataset.step);load();}
+  };
+  if(editing)await operationForm(panel,dt,record);
+  else if(dt==="Attendance"||dt==="Shift Assignment"){
+    const showGrid=dt==="Attendance"?attendanceCalendar:shiftRoster;
+    const gridLabel=dt==="Attendance"?"Monthly view":"Weekly roster";
+    const toggle=document.createElement("button");
+    toggle.type="button";
+    toggle.textContent="List view";
+    screen.querySelector(".bar").append(toggle);
+    let calendar=true;
+    toggle.onclick=()=>{
+      calendar=!calendar;
+      toggle.textContent=calendar?"List view":gridLabel;
+      if(calendar){++request;panel.onclick=null;showGrid(panel);}
+      else{panel.onclick=null;offset=0;load();panel.onclick=listClick;}
+    };
+    const listClick=panel.onclick;
+    panel.onclick=null;
+    await showGrid(panel);
+  }else await load();
+}
+
+async function attendanceCalendar(panel){
+  const date=new Date();
+  const month=date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0");
+  panel.innerHTML='<form class="bar"><label>Month<input type="month" name="month" value="'+month+'" required></label><button>Apply</button></form><p class="muted">● Recorded attendance · ○ Not marked</p><div class="calendar"></div>';
+  const form=panel.querySelector("form"), results=panel.querySelector(".calendar");
+  let offset=0, request=0;
+  async function load(){
+    const seq=++request;
+    results.textContent="Loading…";
+    try{
+      const selected=form.elements.month.value;
+      const data=await api("attendance_calendar",{month:selected,offset});
+      if(!results.isConnected||seq!==request)return;
+      const days=Array.from({length:data.days},(_,i)=>i+1);
+      const key=(id,day)=>id+"|"+day;
+      const records=new Map(data.entries.map(row=>[key(row.employee,Number(row.attendance_date.slice(-2))),row.status]));
+      results.innerHTML=table(["Employee",...days],data.employees.map(row=>[
+        '<strong>'+e(row.employee_name)+'</strong><div class="muted">'+e(row.department)+'</div>',
+        ...days.map(day=>{
+          const status=records.get(key(row.name,day))||"Not marked";
+          return '<span class="dot" data-status="'+e(status)+'" title="'+e(status)+'" aria-label="'+e(status)+'">'+(status==="Not marked"?"○":"●")+'</span>';
+        })
+      ]))+pagination(offset,data.has_more?26:data.employees.length);
+    }catch(error){if(results.isConnected&&seq===request){results.textContent="";showError(error);}}
+  }
+  form.onsubmit=event=>{event.preventDefault();offset=0;load();};
+  results.onclick=event=>{const step=event.target.closest("[data-step]");if(step){offset+=Number(step.dataset.step);load();}};
+  await load();
+}
+
+function pageDate(date){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,"0"),String(date.getDate()).padStart(2,"0")].join("-");}
+function shiftDate(date,days){
+  const value=new Date(date+"T12:00:00");
+  value.setDate(value.getDate()+days);
+  return pageDate(value);
+}
+async function shiftRoster(panel){
+  panel.innerHTML='<form class="bar"><button type="button" data-week="-7" aria-label="Previous week">‹</button><label>Week of <input type="date" name="start" value="'+pageDate(new Date())+'" required></label><button type="button" data-week="7" aria-label="Next week">›</button><label>Department <input name="department" placeholder="All departments" list="roster-departments"><datalist id="roster-departments"></datalist></label><button>Apply</button></form><p class="muted">Select a shift to open its assignment. A dash means no submitted assignment was found.</p><div class="roster"></div>';
+  const form=panel.querySelector("form"), result=panel.querySelector(".roster");
+  const date=form.elements.start, department=form.elements.department;
+  let offset=0,request=0,lookup=0;
+  async function load(){
+    const seq=++request;
+    result.textContent="Loading roster…";
+    try{
+      const data=await api("shift_week",{start:date.value,department:department.value,offset});
+      if(!result.isConnected||seq!==request)return;
+      date.value=data.start;
+      result.innerHTML=table(["Employee","Department","Designation",...data.days.map(day=>new Date(day+"T12:00:00").toLocaleDateString("en-MY",{weekday:"short",day:"numeric",month:"short"}))],data.employees.map(row=>[
+        '<strong>'+e(row.employee_name)+'</strong><div class="muted">'+e(row.name)+'</div>',e(row.department),e(row.designation),
+        ...data.days.map(day=>data.assignments.filter(a=>a.employee===row.name&&a.start_date<=day&&(!a.end_date||a.end_date>=day))
+          .map(a=>'<button class="shift-tag" data-shift="'+e(a.name)+'">'+e(a.shift_type)+'</button>').join(" ")||'<span class="muted">—</span>')
+      ]))+pagination(offset,data.has_more?26:data.employees.length);
+    }catch(error){if(result.isConnected&&seq===request){result.textContent="";showError(error);}}
+  }
+  form.onsubmit=event=>{event.preventDefault();offset=0;load();};
+  form.onclick=event=>{const button=event.target.closest("[data-week]");if(button){date.value=shiftDate(date.value||pageDate(new Date()),Number(button.dataset.week));offset=0;load();}};
+  department.oninput=async()=>{
+    const seq=++lookup;
+    try{
+      const values=await api("link_options",{doctype:"Department",search:department.value});
+      if(seq===lookup&&department.isConnected)department.list.innerHTML=values.map(value=>'<option value="'+e(value)+'"></option>').join("");
+    }catch(error){if(seq===lookup&&department.isConnected)showError(error);}
+  };
+  result.onclick=event=>{
+    const shift=event.target.closest("[data-shift]");
+    if(shift)openOperation("Shift Assignment",shift.dataset.shift);
+    const step=event.target.closest("[data-step]");
+    if(step){offset+=Number(step.dataset.step);load();}
+  };
+  await load();
+}
+async function payroll(render){
+  if(!render('<div class="hero"><div><h1>Payroll</h1><p class="muted">Review payroll runs and salary slips by pay period.</p></div></div><form class="bar"><label>Pay month<input type="month" name="month" value="'+pageDate(new Date()).slice(0,7)+'" required></label><button>Apply</button></form><div id="payroll-results"></div>'))return;
+  const form=screen.querySelector("form"),result=screen.querySelector("#payroll-results");
+  let offset=0,request=0;
+  const money=(value,currency)=>e(currency||"")+' '+e(Number(value||0).toLocaleString("en-MY",{minimumFractionDigits:2,maximumFractionDigits:2}));
+  const link=(route,id,label)=>'<a href="/app/'+route+'/'+encodeURIComponent(id)+'">'+e(label||id)+'</a>';
+  const state=value=>e(({0:"Draft",1:"Submitted",2:"Cancelled"})[value]||"Unknown");
+  async function load(){
+    const seq=++request;
+    result.textContent="Loading payroll…";
+    try{
+      const data=await api("payroll_register",{month:form.elements.month.value,offset});
+      if(!result.isConnected||seq!==request)return;
+      const visible=data.slips.slice(0,25), totals=new Map();
+      for(const row of visible){
+        const currency=row.currency||"";
+        const total=totals.get(currency)||[0,0,0];
+        [row.gross_pay,row.total_deduction,row.net_pay].forEach((value,i)=>total[i]+=Number(value||0));
+        totals.set(currency,total);
+      }
+      result.innerHTML='<section><h2>Payroll runs</h2>'+table(["Run","Company","From","To","State"],data.runs.map(run=>[
+        link("payroll-entry",run.name),e(run.company),e(run.start_date),e(run.end_date),state(run.docstatus)
+      ]))+'</section><div class="bar"><span class="muted">Salary slip totals for this page</span></div>'+
+        [...totals].map(([currency,amounts])=>'<div class="cards">'+["Gross pay","Deductions","Net pay"].map((label,i)=>'<article class="card"><span>'+label+'</span><strong>'+money(amounts[i],currency)+'</strong></article>').join("")+'</div>').join("")+
+        '<section><h2>Payroll register</h2>'+table(["Employee","Department","Gross pay","Deductions","Net pay","State"],visible.map(row=>[
+          link("salary-slip",row.name,row.employee_name||row.employee),e(row.department),money(row.gross_pay,row.currency),
+          money(row.total_deduction,row.currency),money(row.net_pay,row.currency),state(row.docstatus)
+        ]))+pagination(offset,data.slips.length)+'</section>';
+    }catch(error){if(result.isConnected&&seq===request){result.textContent="";showError(error);}}
+  }
+  form.onsubmit=event=>{event.preventDefault();offset=0;load();};
+  result.onclick=event=>{const step=event.target.closest("[data-step]");if(step){offset+=Number(step.dataset.step);load();}};
+  await load();
+}
+
+function openOperation(dt,record){
+  const id=++viewId;
+  notice.textContent="";
+  const render=html=>{if(id!==viewId)return false;screen.innerHTML=html;return true;};
+  operation(render,dt,record,true).catch(error=>{if(id===viewId)showError(error);});
+}
+async function operationForm(panel,dt,record){
+  panel.textContent="Loading form…";
+  const data=await api("operation_form",{doctype:dt,name:record});
+  if(!panel.isConnected)return;
+  let next=0;
+  function control(f,val,index=""){
+    const name=e(f.name+index), value=String(val??"");
+    const attrs=' name="'+name+'" '+(f.required?'required ':'')+(data.can_write?'':'disabled ');
+    let input;
+    if(f.type==="Select"){
+      input='<select'+attrs+'>'+[...new Set(["",...(f.options||"").split("\n"),value])].map(x=>'<option'+(x===value?' selected':'')+'>'+e(x)+'</option>').join("")+'</select>';
+    }else if(f.type==="Check"){
+      input='<input type="checkbox"'+attrs+(Number(val)?' checked':'')+'>';
+    }else if(f.type==="Link"){
+      input='<input'+attrs+' value="'+e(value)+'" data-link="'+e(f.options)+'" list="choices-'+name+'" autocomplete="off"><datalist id="choices-'+name+'"></datalist>';
+    }else{
+      const type={Date:"date",Datetime:"datetime-local",Time:"time"}[f.type]||"text";
+      input='<input type="'+type+'"'+attrs+' value="'+e(type==="datetime-local"?value.replace(" ","T").slice(0,19):value)+'"'+(type==="datetime-local"?' step="1"':'')+'>';
+    }
+    return '<label>'+e(f.label)+input+'</label>';
+  }
+  const holiday=(row={})=>{
+    const suffix="_"+(++next);
+    return '<div class="fields holiday-row" data-suffix="'+suffix+'">'+data.child_schema.map(f=>control(f,row[f.name],suffix)).join("")+(data.can_write?'<button type="button" data-remove>Remove date</button>':'')+'</div>';
+  };
+  panel.innerHTML='<div class="bar"><button type="button" id="operation-back">Back to records</button></div><h2>'+e(record||"New record")+'</h2><form><div class="fields">'+data.schema.map(f=>control(f,data.values[f.name])).join("")+'</div>'+
+    (data.child_schema.length?'<fieldset><legend>Holiday dates</legend><div id="holiday-rows">'+data.holidays.map(holiday).join("")+'</div>'+(data.can_write?'<button type="button" data-add-date>Add date</button>':'')+'</fieldset>':'')+
+    (data.can_write?'<div class="bar"><button class="primary" value="save">Save</button>'+(data.can_submit?'<button value="submit">Submit record</button>':'')+'</div>':'')+'</form>';
+  panel.querySelector("#operation-back").onclick=()=>view("operation",dt);
+  const form=panel.querySelector("form");
+  addFieldNavigation(form);
+  form.onclick=event=>{
+    if(event.target.closest("[data-add-date]"))form.querySelector("#holiday-rows").insertAdjacentHTML("beforeend",holiday());
+    if(event.target.closest("[data-remove]"))event.target.closest(".holiday-row").remove();
+  };
+  let timer, linkRequest=0;
+  function suggest(event){
+    const input=event.target.closest("[data-link]");
+    if(!input)return;
+    const seq=++linkRequest;
+    clearTimeout(timer);
+    timer=setTimeout(async()=>{
+      try{
+        const options=await api("link_options",{doctype:input.dataset.link,search:input.value});
+        if(input.isConnected&&seq===linkRequest)input.list.innerHTML=options.map(v=>'<option value="'+e(v)+'"></option>').join("");
+      }catch(error){if(input.isConnected&&seq===linkRequest)showError(error);}
+    },200);
+  }
+  form.addEventListener("input",suggest);
+  form.addEventListener("focusin",suggest);
+  function values(schema,suffix=""){
+    return Object.fromEntries(schema.map(f=>{
+      const input=form.elements.namedItem(f.name+suffix);
+      let value=input.type==="checkbox"?Number(input.checked):input.value;
+      if(input.type==="datetime-local"&&value)value=value.replace("T"," ");
+      return [f.name,value];
+    }));
+  }
+  form.onsubmit=async event=>{
+    event.preventDefault();
+    if(!data.can_write)return;
+    const button=event.submitter;
+    const submit=button?.value==="submit";
+    if(submit&&!window.confirm("Submit this record?"))return;
+    const payload={doctype:dt,name:record,values:values(data.schema),submit:Number(submit)};
+    if(data.child_schema.length)payload.holidays=Array.from(form.querySelectorAll(".holiday-row"),row=>values(data.child_schema,row.dataset.suffix));
+    form.querySelectorAll('button:not([type]),button[type="submit"]').forEach(b=>b.disabled=true);
+    try{
+      const saved=await api("operation_save",payload,true);
+      if(form.isConnected)openOperation(dt,saved);
+    }catch(error){
+      if(form.isConnected){showError(error);form.querySelectorAll('button:not([type]),button[type="submit"]').forEach(b=>b.disabled=false);}
+    }
+  };
+}
+
+function addFieldNavigation(form){
+  const bar=document.createElement("div");
+  bar.className="bar";
+  bar.innerHTML='<button type="button">Previous field</button><button type="button">Next field</button><span class="muted">Tab / Shift+Tab</span>';
+  form.prepend(bar);
+  let last=null;
+  const selector="input:not([type=hidden]):enabled,select:enabled,textarea:enabled";
+  form.addEventListener("focusin",event=>{if(event.target.matches(selector))last=event.target;});
+  [...bar.querySelectorAll("button")].forEach((button,index)=>button.onclick=()=>{
+    const fields=[...form.querySelectorAll(selector)].filter(input=>input.getClientRects().length);
+    if(!fields.length)return;
+    const current=fields.indexOf(last);
+    const target=current<0?(index===0?fields.length-1:0):Math.max(0,Math.min(fields.length-1,current+(index===0?-1:1)));
+    fields[target].focus();
+  });
+}
+function employeeDocuments(p, employee, form) {
+  const panel=document.createElement("section");
+  panel.className="employee-documents";
+  const titles=["Employee details","Passport & permit","Joining agreement","Experience certificate","Resignation letter"];
+  const field=(name,value="")=>'<input type="text" name="'+e(name)+'" value="'+e(value)+'">';
+  panel.innerHTML='<h2>Employee documents</h2><p class="muted">Open a print preview for this employee.</p><div class="bar">'+titles.slice(0,4).map((title,i)=>'<button type="button" data-print="'+i+'" '+(i===1&&!p.can_view_private?"disabled":"")+'>'+e(title)+'</button>').join("")+'</div>'+
+    '<details><summary>Joining agreement terms</summary><div class="fields"><label>Basic monthly salary (RM)<input name="agreement_salary" type="number" min="0.01" step="0.01" value="1700"></label><label>Food arrangement'+field("agreement_food")+'</label><label>Work location'+field("agreement_location")+'</label><label>Working hours'+field("agreement_hours")+'</label><label>Notice period'+field("agreement_notice")+'</label></div></details>'+
+    '<details><summary>Resignation</summary><div class="fields"><label><span>Record resignation</span><input type="checkbox" name="record_resignation" '+(p.resignation.letter_date?"checked ":"")+(!p.can_record_resignation?"disabled":"")+'></label><label>Letter date<input type="date" name="letter_date" value="'+e(p.resignation.letter_date)+'"></label><label>Last working day<input type="date" name="last_day" value="'+e(p.resignation.last_day)+'"></label></div><div class="bar">'+(p.can_record_resignation?'<button type="button" data-save-resignation>Save resignation</button>':'')+'<button type="button" data-print="4" '+(!p.resignation.letter_date?"disabled":"")+'>'+titles[4]+'</button></div></details>';
+  form.after(panel);
+  const get=name=>panel.querySelector('[name="'+name+'"]');
+  const v=p.values, c=p.private, name=p.full_name||v.first_name||employee;
+  const position=v.custom_balaji_position||v.designation;
+  const lines=items=>'<dl>'+items.map(([key,val])=>'<div><dt>'+e(key)+'</dt><dd>'+e(val||"—")+'</dd></div>').join("")+'</dl>';
+  const paragraph=value=>'<p>'+e(value)+'</p>';
+  const signature=label=>'<div class="signature">'+e(label)+'</div>';
+  const company=v.company||"Balaji Enterprises";
+  function copy(field,label){
+    const url=p.attachments[field];
+    if(!url?.startsWith("/private/files/"))return '<article><h2>'+e(label)+'</h2><p>Copy unavailable.</p></article>';
+    if(!/\.(png|jpe?g|webp)(?:$|\?)/i.test(url))return '<article><h2>'+e(label)+'</h2><a href="'+e(url)+'" target="_blank" rel="noopener">Open original PDF for printing</a></article>';
+    return '<article><h2>'+e(label)+'</h2><img src="'+e(url)+'" alt="'+e(label)+'"></article>';
+  }
+  function preview(index){
+    let content="";
+    if(index===0){
+      content=lines([["Employee",name],["Employee ID",employee],["Position",position],["Department",v.department],["Joining date",v.date_of_joining],...(p.can_view_private?[
+        ["Work permit number",c.permit_number],["Work permit expiry",c.permit_expiry_date],["Visa number",c.visa_number],["Visa expiry",c.visa_expiry_date],["Passport number",c.passport_number],["Passport expiry",c.passport_expiry_date]
+      ]:[])]);
+    }else if(index===1){
+      content='<div class="print-copies">'+copy("passport_copy","Passport")+copy("permit_copy","Work permit")+'</div>';
+      if(p.attachments.passport_copy&&p.attachments.permit_copy){
+        const url="/api/method/balaji_hr.people.print_document_copies?"+new URLSearchParams({employee});
+        content+='<p class="print-controls"><a href="'+e(url)+'" target="_blank" rel="noopener">Open combined PDF for front/back printing</a></p>';
+      }
+    }else if(index===2){
+      const salary=Number(get("agreement_salary").value);
+      const terms=["agreement_food","agreement_location","agreement_hours","agreement_notice"];
+      if(!(salary>0)||terms.some(key=>!get(key).value.trim())){
+        panel.querySelector("details").open=true;
+        throw Error("Fill in salary, food arrangement, work location, working hours and notice period before printing.");
+      }
+      content=paragraph("This joining agreement records the employment terms agreed between "+company+" and "+name+".")+
+        lines([["Employee",name],["Position",position],["Joining date",v.date_of_joining],["Basic monthly salary","RM "+salary.toFixed(2)],["Food arrangement",get("agreement_food").value],["Work location",get("agreement_location").value],["Working hours",get("agreement_hours").value],["Notice period",get("agreement_notice").value]])+
+        paragraph("Either party may end the employment by giving the notice stated above, subject to applicable law.")+
+        '<div class="signatures">'+signature("Employer representative")+signature("Employee")+'</div>';
+    }else if(index===3){
+      content=paragraph("This is to certify that "+name+" joined "+company+(v.date_of_joining?" on "+v.date_of_joining:"")+(position?" as "+position:"")+".")+
+        lines([["Employee ID",employee],["Department",v.department],["Last working day",p.resignation.last_day]])+signature("Authorized signatory");
+    }else if(index===4&&p.resignation.letter_date){
+      content=lines([["Letter date",p.resignation.letter_date],["Employee",name],["Position",position],["Last working day",p.resignation.last_day]])+
+        paragraph("Dear HR Manager,")+paragraph("I am submitting my resignation from "+company+". My last working day is stated above.")+paragraph("Thank you for the opportunity to work with the company.")+signature("Employee signature");
+    }else return;
+    const dialog=document.querySelector("#print-dialog");
+    dialog.querySelector(".print-sheet").innerHTML='<header><strong>'+e(company)+'</strong><span>Human Resources</span></header><h1>'+e(titles[index])+'</h1><p class="print-subtitle">'+e(name)+'</p>'+content;
+    dialog.showModal();
+  }
+  panel.onclick=async event=>{
+    const print=event.target.closest("[data-print]");
+    const save=event.target.closest("[data-save-resignation]");
+    try{
+      if(print)preview(Number(print.dataset.print));
+      if(save){
+        if(!get("record_resignation").checked||!get("letter_date").value||!get("last_day").value)
+          throw Error("Tick Record resignation and enter the letter date and last working day.");
+        save.disabled=true;
+        const dates=await api("save_resignation",{employee,letter_date:get("letter_date").value,last_day:get("last_day").value},true);
+        p.resignation=dates;
+        panel.querySelector('[data-print="4"]').disabled=false;
+        notice.className="";notice.textContent="Resignation dates saved.";
+      }
+    }catch(error){showError(error);}
+    finally{if(save)save.disabled=false;}
+  };
+}
+
+const printDialog=document.querySelector("#print-dialog");
+document.querySelector("#print-close").onclick=()=>printDialog.close();
+document.querySelector("#print-now").onclick=async()=>{
+  await Promise.all(Array.from(printDialog.querySelectorAll("img"),image=>image.decode().catch(()=>{})));
+  window.print();
+};
+document.addEventListener("keydown",event=>{
+  if(event.defaultPrevented||event.repeat||event.isComposing||event.altKey||event.ctrlKey||event.metaKey)return;
+  const typing=event.target.closest?.("input,textarea,select,[contenteditable]");
+  if(event.key==="Escape"||(event.key.toLowerCase()==="o"&&!typing)){
+    event.preventDefault();
+    if(printDialog.open)printDialog.close();
+    view("overview");
+  }
+});
 view("overview");
 </script>
+{% if vault_eligible %}
+<link rel="stylesheet" href="/assets/balaji_hr/vault.css">
+<script data-balaji-vault-token="{{ csrf_token | e }}" src="/assets/balaji_hr/vault.js?v=people-2" defer></script>
+{% endif %}
 </html>
