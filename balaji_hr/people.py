@@ -138,7 +138,9 @@ def profile(employee=None):
             schema.append(dict(name=df.fieldname, label=df.label, type=df.fieldtype, options=df.options,
                                required=bool(df.reqd), private=dt == PRIVATE))
     resignation = read_fields(doc, ("resignation_letter_date", "relieving_date"))
-    return dict(full_name=doc.get("employee_name"), can_view_private=private_visible,
+    company_info = frappe.db.get_value("Company", doc.get("company"), ["company_name", "email", "phone_no", "website"], as_dict=True) \
+        if doc.get("company") and frappe.has_permission("Company", "read") else {}
+    return dict(full_name=doc.get("employee_name"), company_info=company_info or {}, can_view_private=private_visible,
                 resignation=dict(letter_date=resignation.get("resignation_letter_date"),
                                  last_day=resignation.get("relieving_date")),
                 can_record_resignation=bool(employee and doc.has_permission("write") and
@@ -470,4 +472,141 @@ def payroll_register(month, offset=0):
     runs = frappe.get_list("Payroll Entry", filters=filters,
                            fields=["name", "company", "start_date", "end_date", "docstatus"],
                            order_by="start_date desc", page_length=15) if frappe.has_permission("Payroll Entry", "read") else []
-    return dict(slips=slips, runs=runs)
+    totals = frappe.get_list("Salary Slip", filters=filters, group_by="currency", fields=[
+        "currency", "count(name) as slips", "sum(gross_pay) as gross", "sum(total_deduction) as deductions",
+        "sum(net_pay) as net"], page_length=10)
+    return dict(slips=slips, runs=runs, totals=totals)
+
+
+# ---------------------------------------------------------------------------
+# Bulk attendance, shift matching and salary slip detail
+# ---------------------------------------------------------------------------
+ATTENDANCE_STATUSES = ("Present", "Absent", "Half Day", "Work From Home")
+
+
+@frappe.whitelist()
+def attendance_sheet(date=None, department=""):
+    from frappe.utils import getdate
+
+    if not frappe.has_permission("Attendance", "read"):
+        frappe.throw("Attendance access required.", frappe.PermissionError)
+    day = getdate(date or today())
+    filters = {"status": "Active", "date_of_joining": ["<=", day]}
+    if department:
+        filters["department"] = department
+    people = frappe.get_list("Employee", filters=filters,
+                             fields=["name", "employee_name", "department", "designation"],
+                             order_by="employee_name asc, name asc", page_length=500)
+    marked = {}
+    if people:
+        for row in frappe.get_list("Attendance", filters={
+            "employee": ["in", [p.name for p in people]], "attendance_date": day, "docstatus": ["<", 2],
+        }, fields=["employee", "status", "docstatus"], page_length=0):
+            marked[row.employee] = dict(status=row.status, docstatus=row.docstatus)
+    return dict(date=day, employees=[dict(p, marked=marked.get(p.name)) for p in people],
+                can_create=frappe.has_permission("Attendance", "create"))
+
+
+@frappe.whitelist(methods=["POST"])
+def attendance_bulk_save(date, rows):
+    from frappe.utils import getdate
+
+    rows = frappe.parse_json(rows) or []
+    if not isinstance(rows, list) or not rows:
+        frappe.throw("Mark at least one employee.")
+    if len(rows) > 500:
+        frappe.throw("Too many rows in one save.")
+    day = getdate(date)
+    if day > getdate(today()):
+        frappe.throw("Attendance cannot be marked for a future date.")
+    frappe.has_permission("Attendance", "create", throw=True)
+    can_submit = frappe.has_permission("Attendance", "submit")
+    created, skipped, errors = 0, 0, []
+    for row in rows:
+        employee, status = row.get("employee"), row.get("status")
+        if status not in ATTENDANCE_STATUSES:
+            errors.append(dict(employee=employee, error="Invalid status."))
+            continue
+        if frappe.db.exists("Attendance", {"employee": employee, "attendance_date": day, "docstatus": ["<", 2]}):
+            skipped += 1
+            continue
+        frappe.db.savepoint("balaji_att")
+        try:
+            doc = frappe.get_doc({"doctype": "Attendance", "employee": employee,
+                                  "attendance_date": day, "status": status})
+            doc.insert()
+            if can_submit:
+                doc.submit()
+            created += 1
+        except Exception as exc:
+            frappe.db.rollback(save_point="balaji_att")
+            errors.append(dict(employee=employee, error=str(exc)[:200]))
+    return dict(created=created, skipped=skipped, errors=errors)
+
+
+@frappe.whitelist()
+def shift_match_data():
+    if not frappe.has_permission("Shift Assignment", "read"):
+        frappe.throw("Shift assignment access required.", frappe.PermissionError)
+    people = frappe.get_list("Employee", filters={"status": "Active"},
+                             fields=["name", "employee_name", "department", "designation"],
+                             order_by="employee_name asc, name asc", page_length=500)
+    shifts = frappe.get_list("Shift Type", fields=["name", "start_time", "end_time"],
+                             order_by="name asc", page_length=50)
+    return dict(employees=people, shifts=[dict(s, start_time=str(s.start_time), end_time=str(s.end_time)) for s in shifts],
+                can_create=frappe.has_permission("Shift Assignment", "create"))
+
+
+@frappe.whitelist(methods=["POST"])
+def shift_match_save(pairs, start_date, end_date=None, submit=1):
+    from frappe.utils import getdate
+
+    pairs = frappe.parse_json(pairs) or []
+    if not isinstance(pairs, list) or not pairs:
+        frappe.throw("Match at least one employee with a shift.")
+    if len(pairs) > 500:
+        frappe.throw("Too many matches in one save.")
+    if not start_date:
+        frappe.throw("Choose a start date.")
+    if end_date and getdate(end_date) < getdate(start_date):
+        frappe.throw("End date cannot precede the start date.")
+    frappe.has_permission("Shift Assignment", "create", throw=True)
+    do_submit = cint(submit) and frappe.has_permission("Shift Assignment", "submit")
+    created, errors = 0, []
+    for pair in pairs:
+        frappe.db.savepoint("balaji_shift")
+        try:
+            doc = frappe.get_doc({"doctype": "Shift Assignment", "employee": pair.get("employee"),
+                                  "shift_type": pair.get("shift_type"), "start_date": start_date,
+                                  "end_date": end_date or None, "status": "Active"})
+            doc.insert()
+            if do_submit:
+                doc.submit()
+            created += 1
+        except Exception as exc:
+            frappe.db.rollback(save_point="balaji_shift")
+            errors.append(dict(employee=pair.get("employee"), error=str(exc)[:200]))
+    return dict(created=created, errors=errors, submitted=bool(do_submit))
+
+
+@frappe.whitelist()
+def salary_slip_detail(name):
+    from frappe.utils import money_in_words
+
+    doc = frappe.get_doc("Salary Slip", name)
+    doc.check_permission("read")
+    company = frappe.db.get_value("Company", doc.company, ["company_name", "email", "phone_no", "website"], as_dict=True) \
+        if frappe.has_permission("Company", "read") else None
+    rows = lambda table: [dict(component=r.salary_component, amount=r.amount) for r in doc.get(table, [])]
+    return dict(
+        name=doc.name, docstatus=doc.docstatus, company=doc.company, company_info=company or {},
+        employee=doc.employee, employee_name=doc.employee_name, department=doc.get("department"),
+        designation=doc.get("designation"), start_date=doc.start_date, end_date=doc.end_date,
+        posting_date=doc.get("posting_date"), currency=doc.get("currency") or "MYR",
+        payment_days=doc.get("payment_days"), working_days=doc.get("total_working_days"),
+        lwp=doc.get("leave_without_pay"), absent_days=doc.get("absent_days"),
+        bank_name=doc.get("bank_name"), bank_account=doc.get("bank_account_no"),
+        earnings=rows("earnings"), deductions=rows("deductions"),
+        gross_pay=doc.gross_pay, total_deduction=doc.total_deduction, net_pay=doc.net_pay,
+        in_words=money_in_words(doc.net_pay, doc.get("currency") or "MYR"),
+    )
